@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<%= head_html(css) %>
+
+<body>
+    <%= header_html(sign_in: false) %>
+
+    <div class="content center">
+
+        <h1 class="title">
+           Urgent Care Summary & Prescription
+        </h1>
+        <section>
+            <table class="card">
+                <tbody>
+                <tr>
+                    <td class="card-description">
+
+                    <p>We are pleased to provide you with your medical summary and prescription attached to this email.
+                    This document includes important information and recommendations from your recent visit with our specialist.
+                    Should you have any questions or require further assistance, please do not hesitate to contact us.
+                    Additionally, if you found our service helpful, we would be grateful if you could share your experience by leaving a review on the App Store or Google Play Store.
+                    Your feedback helps us continue to provide high-quality care.</p>
+
+                        <p>Best Regards,</p>
+                        <p>DrOnline Team</p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <%= footer_html() %>
+</body>
+</html>

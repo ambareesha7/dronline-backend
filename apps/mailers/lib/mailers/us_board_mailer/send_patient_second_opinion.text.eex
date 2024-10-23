@@ -1,0 +1,9 @@
+Specialist <%= specialist_name %> has submitted an opinion.
+
+You can also track the progress in the DrOnline App.
+<%= # dynamic_link %>
+
+Best Regards,
+DrOnline Team
+
+<%= footer_text() %>

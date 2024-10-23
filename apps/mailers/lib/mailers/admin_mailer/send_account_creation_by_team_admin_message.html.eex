@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<%= head_html(css) %>
+
+<body>
+    <%= header_html(sign_in: false) %>
+
+    <div class="content center">
+        <div class="banner">
+            <img class="banner-image" src="https://storage.googleapis.com/dronline-prod/images/mailer_content/banner_forgot_password.png" />
+        </div>
+        <h1 class="title">
+          You've been invited to join a team in DrOnline
+        </h1>
+        <section>
+            <p>
+                Click the following button to set a password and complete your profile:
+            </p>
+            <a href="<%= link %>" class="blue-button">
+                Sign In
+            </a>
+        </section>
+    </div>
+
+    <%= footer_html() %>
+</body>
+</html>

@@ -1,0 +1,485 @@
+syntax = "proto3";
+
+package visits;
+
+import "elixir.proto";
+import "generics.proto";
+
+option (elixir_module_prefix) = "Proto.Visits";
+
+enum VisitType {
+  ONLINE = 0;
+  IN_OFFICE = 1;
+  US_BOARD = 3;
+}
+
+// POST /panel_api/visits/my_calendar/create_timeslots
+message CreateTimeslotsRequest {
+  repeated TimeslotParams timeslot_params = 1;
+}
+message CreateTimeslotsResponse {
+}
+
+// DELETE /panel_api/visits/my_calendar/remove_timeslots
+// Currently only removing free timeslots is supported
+message RemoveTimeslotsRequest {
+  repeated TimeslotParams timeslot_params = 1;
+}
+
+message RemoveTimeslotsResponse {
+}
+
+// GET /api/visits/specialist_calendar/<specialist_id>?month=<unix_timestamp>
+// GET /panel_api/visits/my_calendar?month=<unix_timestamp>
+//
+// Params:
+// * month (required) - any unix timestamp which is contained in given month
+//                      e.g. any value between 1577836800 (2020-01-01T00:00:00) and
+//                     1580515199 (2020-01-31T23:59:59) will count as January 2020
+//
+// Additionally, results will include timeslots from last day of previous and first
+// day of following month in order to cover any possible timezone shift
+message GetCalendarResponse {
+  repeated Timeslot timeslots = 1;
+}
+
+// GET /api/visits/medical_category_calendar/<medical_category_id>?month=<unix_timestamp>
+message GetMedicalCategoryCalendarResponse {
+  repeated MedicalCategoryTimeslot medical_category_timeslots = 1;
+}
+
+// VISIT DEMANDS
+// POST /api/visits/visit_demands/medical_category/<medical_category_id>
+// POST /api/visits/visit_demands/specialist/<specialist_id>
+// GET /api/visits/visit_demands/medical_category/<medical_category_id>
+// GET /api/visits/visit_demands/specialist/<specialist_id>
+message GetVisitDemandAvailabilityResponse {
+  bool is_visit_demand_available = 1;
+}
+
+// GET /panel_api/visits/:visit_id
+message GetVisitResponse {
+  VisitDataForSpecialist visit = 1;
+  MedicalCategory medical_category = 2;
+}
+
+// GET /api/visits/show/:visit_id
+message GetPatientVisitResponse {
+  VisitDataForPatient visit = 1;
+}
+
+// POST /api/visits/specialist_calendar/<specialist_id>/create_visit
+message CreateVisitRequest {
+  TimeslotParams timeslot_params = 1;
+  uint64 chosen_medical_category_id = 2; // id of medical category chosen by patient
+  PaymentsParams payments_params = 3;
+  string user_timezone = 4; // e.g Indian/Mayotte, US/Alaska, Europe/Warsaw
+}
+
+// POST /api/visits/specialist_calendar/:specialist_id/create_us_board_visit
+message CreateUsBoardVisitRequest {
+  TimeslotParams timeslot_params = 1;
+  string us_board_request_id = 2;
+}
+
+message CreateVisitResponse{
+  uint64 record_id = 1;
+}
+
+// POST /panel_api/visits/specialist_calendar/<specialist_id>/create_visit
+message CreateTeamMemberVisitRequest {
+  TimeslotParams timeslot_params = 1;
+  uint64 chosen_medical_category_id = 2;
+  uint64 patient_id = 3;
+}
+
+// GET /api/visits/my_visits?next_token=<next_token>&status=<status>&patient=<patient>
+//
+// Params:
+// * next_token (optional) - used to fetch next page; when set to 0 or missing first page will be returned
+// * status (optional) - used to filter by status, values: 'SCHEDULED', 'ONGOING', 'DONE', 'CANCELED'
+// * patient (optional) - used to limit visits to single patient, possible values: patient_id of child of current patient or 0 for current patient
+message GetVisitsResponse {
+  repeated VisitDataForPatient visits = 1;
+  string next_token = 2; // 0 when there's no more data to be fetched
+  repeated generics.Patient patients = 3;
+}
+
+// GET /panel_api/visits/scheduled_visits?next_token=<next_token>
+// DEPRECATED to be removed after we switch implementation
+message GetScheduledVisitsResponse {
+  repeated VisitDataForPatient visits = 1;
+  repeated generics.Patient patients = 3;
+  string next_token = 2; // 0 when there's no more data to be fetched
+}
+
+// GET /panel_api/visits/pending
+//
+// Returns list of pending visits that should be reviewed by GP
+// Limited to 50 entries
+//
+// scopes: GP
+message GetPendingVisitsResponse {
+  repeated VisitDataForSpecialist visits = 1;
+  repeated generics.Patient patients = 2;
+  repeated generics.Specialist specialists = 3;
+}
+
+// CHANNEL PAYLOAD
+message PendingVisitsUpdate {
+  repeated VisitDataForSpecialist visits = 1;
+  repeated generics.Patient patients = 2;
+  repeated generics.Specialist specialists = 3;
+}
+
+// GET /panel_api/visits/prepared DEPRECATED
+// GET /panel_api/visits/upcoming
+//
+// Returns list of prepared visits for freelancer doctor
+// Limited to 50 entries
+//
+// scopes: EXTERNAL
+message GetDoctorPendingVisitsResponse {
+  repeated VisitDataForSpecialist visits = 1;
+  repeated generics.Patient patients = 2;
+}
+
+// CHANNEL PAYLOAD
+message DoctorPendingVisitsUpdate {
+  repeated VisitDataForSpecialist visits = 1;
+  repeated generics.Patient patients = 2;
+}
+
+// GET /panel_api/visits/ended?next_token=<next_token>
+//
+// Scopes: EXTERNAL
+//
+// Params:
+// * next_token (optional) - used to fetch next page; when set to "" or missing
+//  first page will be returned
+message GetEndedVisitsResponse {
+  repeated VisitDataForSpecialist visits = 1;
+  repeated generics.Patient patients = 2;
+  string next_token = 3;
+}
+
+// GET /api/visits/index_us_board_second_opinion
+// GET /admin_api/us_board/fetch_requests
+message USBoardSecondOpinionRequestsResponse {
+  repeated USBoardSecondOpinionRequest us_board_second_opinion_requests = 1;
+}
+
+// GET /admin_api/us_board/fetch_request/<id>
+// GET /api/visits/us_board_second_opinion/<id>
+// using us board request_id as id param
+message USBoardSecondOpinionRequestResponse {
+  USBoardSecondOpinionRequest us_board_second_opinion_request = 1;
+}
+
+message USBoardSecondOpinionRequest {
+  enum Status {
+    LANDING_FORM = 0;
+    LANDING_BOOKING = 1;
+    REQUESTED = 2;
+    ASSIGNED = 3;
+    REJECTED = 4;
+    IN_PROGRESS = 5;
+    OPINION_SUBMITTED = 6;
+    CALL_SCHEDULED = 7;
+    DONE = 8;
+    CANCELLED = 9;
+    LANDING_PAYMENT_PENDING = 10;
+  }
+  
+  string id = 1;
+  uint64 specialist_id = 2;
+  uint64 patient_id = 3;
+  string visit_id = 4;
+  generics.DateTime inserted_at = 5;
+  string patient_description = 6;
+  string specialist_opinion = 7;
+  string patient_email = 8;
+  Status status = 9;
+  repeated USBoardFilesToDownload files = 10;
+  PaymentsParams payments_params = 11;
+  repeated SpecialistHistory specialists_history = 12;
+}
+
+// POST /api/visits/request_us_board_second_opinion
+// endpoint for creating US board request by patient
+message RequestUSBoardSecondOpinionRequest {
+  string patient_description = 1;
+  string patient_email = 2;
+  PaymentsParams payments_params = 3;
+  repeated USBoardFiles files = 4;
+}
+
+// POST /landing_api/request_second_opinion
+// endpoint for landing US board booking
+message LandingRequestUSBoardSecondOpinionRequest {
+  string patient_description = 1;
+  string patient_email = 2;
+  repeated USBoardFiles files = 3;
+  string phone_number = 4;
+  string first_name = 5;
+  string last_name = 6;
+}
+
+// POST /landing_api/urgent_care_request
+message LandingUrgentHelpRequest {
+    string phone_number = 1;
+    string email = 2;
+    string first_name = 3;
+    string last_name = 4;
+}
+message LandingUrgentHelpResponse {
+    uint64 patient_id = 1;
+    string urgent_help_request_id = 2;
+    string payment_url = 3;
+    string auth_token = 4;
+}
+
+// POST /landing_api/request_second_opinion
+// response
+message LandingRequestUSBoardSecondOpinionResponse {
+  string payment_url = 1;
+  string second_opinion_request_id = 2;
+}
+
+// POST /landing_api/confirm_second_opinion_payment
+// endpoint for storing second opinion payment confirmation in DB
+message LandingConfirmUSBoardSecondOpinionRequest {
+  string transaction_reference = 1;
+  string second_opinion_request_id = 2;
+}
+
+// POST /landing_api/fill_contact_form
+// endpoint for posting landing US board contact form question
+message LandingUSBoardContactFormRequest {
+  string patient_email = 1;
+  string patient_description = 2;
+}
+
+message RequestUSBoardSecondOpinionResponse {
+  string id = 1;
+}
+
+message USBoardFilesToDownload {
+  string download_url = 1;
+}
+
+message USBoardFiles {
+  string path = 1;
+}
+
+// GET /panel_api/us_board_2nd_opinion
+message GetSpecialistsUSBoardOpinions {
+  repeated SpecialistsUSBoardOpinion requested_opinions = 1;
+}
+
+message SpecialistsUSBoardOpinion {
+  string id = 1;
+  USBoardPatient patient = 2;
+  USBoardSecondOpinionRequest.Status status = 3;
+  generics.DateTime accepted_at = 4;
+  generics.DateTime rejected_at = 5;
+  generics.DateTime assigned_at = 6;
+}
+
+message USBoardPatient {
+  string first_name = 1;
+  string last_name = 2;
+  string email = 3;
+  generics.Gender gender = 4;
+  generics.DateTime birth_date = 5;
+  string avatar_url = 6;
+}
+
+// Response for:
+// 
+// GET /panel_api/us_board_2nd_opinion/:second_opinion_request_id
+// GET /panel_api/us_board_2nd_opinion/by_visit_id/:visit_id
+// PUT /panel_api/us_board_2nd_opinion/:second_opinion_request_id
+// PUT /panel_api/us_board_2nd_opinion/:second_opinion_request_id/submit_opinion
+message USBoardRequestDetails {
+  repeated USBoardFilesToDownload files = 1;
+  string patient_description = 2; 
+  string specialist_opinion = 3;
+  string id = 4;
+  USBoardSecondOpinionRequest.Status status = 5;
+  generics.DateTime inserted_at = 6;
+}
+
+// Request body in:
+// /panel_api/us_board_2nd_opinion/:second_opinion_request_id
+message PostUSBoardSpecialistOpinion {
+  string specialist_opinion = 1;
+}
+
+// POST /panel_api/visits/<visit_id>/move_to_canceled
+//
+// Scopes: EXTERNAL
+
+// POST /api/visits/<visit_id>/move_to_canceled
+
+// message used when sending visit data to patient
+message VisitDataForPatient {
+  enum Status {
+    UNKNOWN = 0;
+    SCHEDULED = 1;
+    ONGOING = 2;
+    DONE = 3;
+    CANCELED = 4;
+  }
+
+  enum Type {
+    ONLINE = 0;
+    IN_OFFICE = 1;
+    US_BOARD = 2;
+  }
+
+  Status status = 1;
+  uint64 start_time = 2;
+  uint64 specialist_id = 3;
+  uint64 patient_id = 5;
+  uint64 record_id = 6;
+  string id = 7;
+  PaymentsParams payments_params = 8;
+  MedicalCategory medical_category = 9;
+  Type visit_type = 10;
+
+  uint64 deprecated1 = 4;
+}
+
+// message used when sending visit data to specialist
+message VisitDataForSpecialist {
+  enum State {
+    UNKNOWN = 0;
+    PENDING = 1;
+    ENDED = 3;
+  }
+
+  enum Type {
+    ONLINE = 0;
+    IN_OFFICE = 1;
+    US_BOARD = 2;
+  }
+
+  string id = 1;
+  uint64 patient_id = 2;
+  uint64 record_id = 3;
+  uint64 scheduled_with = 4; // id of specialist
+  uint64 starts_at = 5;
+  uint64 scheduled_at = 6;
+  uint64 chosen_medical_category_id = 7; // id of medical category chosen by patient
+  State state = 8;
+  Type type = 9;
+}
+
+message TimeslotParams {
+  // unix timestamp in seconds
+  // should be divisible by (30 * 60) to ensure that slot start at
+  // full hour or in middle of an hour (e.g. 18:00 or 18:30)
+  uint64 start_time = 1;
+  Timeslot.Free.FreeTimeslotType visit_type = 2;
+}
+
+// For new endpoints use generics.PaymentsParams. This should be replaced in later releases.
+message PaymentsParams {
+  enum PaymentMethod {
+    TELR = 0; // for Telr gateway
+    EXTERNAL = 1; // for payment outside DrOnline app (e.g. in-office visit)
+    US_BOARD = 2; // "us_board" for second opinions
+  }
+
+  string amount = 1; // amount in string, e.g. 10$ will be "1000"
+  string currency = 2; // currency 3 digits code, e.g. USD
+  string transaction_reference = 3; // payment gateway transaction id
+  PaymentMethod payment_method = 4;
+}
+
+message SpecialistHistory {
+  uint64 specialist_id = 1;
+  generics.DateTime rejected_at = 2;
+  generics.DateTime accepted_at = 3;
+  string specialist_first_name = 4;
+  string specialist_last_name = 5;
+  generics.DateTime assigned_at = 6;
+}
+
+// /api/visits/payment/:record_id
+message GetPaymentForVisit {
+  string amount = 1;
+  string currency = 2;
+  uint64 record_id = 3;
+  string payment_method = 4;
+}
+
+// Duration of any timeslot is always 30 minutes
+message Timeslot {
+  enum VisitState {
+    UNKNOWN = 0;
+    PENDING = 1;
+  }
+
+  message Free {
+    enum FreeTimeslotType {
+      ONLINE = 0;
+      IN_OFFICE = 1;
+      BOTH = 2;
+      US_BOARD = 3;
+    }
+
+    FreeTimeslotType visit_type = 1;
+  }
+
+  message Taken {
+    uint64 patient_id = 1;
+    uint64 record_id = 2;
+    VisitState visit_state = 3;
+    string visit_id = 4;
+    VisitType visit_type = 5;
+  }
+  // unix timestamp in seconds
+  // should be divisible by (30 * 60) to ensure that slot start at
+  // full hour or in middle of an hour (e.g. 18:00 or 18:30)
+  uint64 start_time = 1;
+
+  oneof status {
+    Free free = 3;
+    Taken taken = 4;
+  }
+}
+
+// Duration of timeslot is always 30 minutes
+message MedicalCategoryTimeslot {
+  uint64 start_time = 1;
+  // List of ids for specialists available for given timeslot
+  repeated uint64 available_specialist_ids = 2;
+}
+
+message MedicalCategory {
+  uint64 id = 1;
+  string name = 2;
+  uint64 parent_category_id = 3;
+}
+
+message DaySchedule {
+  uint64 id = 1;
+  uint64 specialist_id = 2;
+  generics.DateTime date = 3;
+  repeated Timeslot free_timeslots = 4;
+  repeated Timeslot taken_timeslots = 5;
+  uint64 free_timeslots_count = 6;
+  uint64 taken_timeslots_count = 7;
+}
+
+// GET /api/visits/:visit_id/uploaded_documents
+// GET /panel_api/visits/:visit_id/uploaded_documents
+message GetUploadedDocuments {
+  repeated string document_urls = 1;
+}
+
+message MoveVisitToCanceledResponse {
+  bool refund = 1;
+}

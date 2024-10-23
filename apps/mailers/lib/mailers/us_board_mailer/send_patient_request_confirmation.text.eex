@@ -1,0 +1,10 @@
+Our team has received your request, and we are currently identifying the most suitable Specialist for your case. We will notify you as soon as a Specialist accepts your request.
+
+Once the payment is made, the confirmation notice will be sent to you via email within 24 hours of receipt of payment.
+
+You can also track the progress in the DrOnline App
+<%= # dynamic_link %>
+
+PS: Our team works tirelessly to improve healthcare accessibility and quality worldwide. If you have any feedback, please, let us know!
+
+<%= footer_text() %>

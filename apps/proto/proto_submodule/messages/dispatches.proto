@@ -1,0 +1,137 @@
+syntax = "proto3";
+
+package dispatches;
+
+import "elixir.proto";
+import "generics.proto";
+
+option (elixir_module_prefix) = "Proto.Dispatches";
+
+// POST /panel_api/dispatches/request_dispatch_to_patient
+//
+// Request a dispatch
+// scopes: "GP", "EXTERNAL"
+message RequestDispatchToPatientRequest {
+  uint64 patient_id = 1;
+  uint64 record_id = 2;
+  PatientLocation patient_location = 3;
+}
+message RequestDispatchToPatientResponse{}
+
+// GET /panel_api/dispatches/pending_dispatches
+//
+// Returns queue of pending dispatches
+// scopes: NURSE
+message GetPendingDispatchesResponse {
+  repeated Dispatch dispatches = 1;
+  repeated generics.Specialist specialists = 2;
+  repeated generics.Patient patients = 3;
+}
+
+// POST /panel_api/dispatches/<request_id>/take_pending_dispatch
+//
+// Nurse accepts choosen dispatch request
+// scopes: NURSE
+message TakePendingDispatchRequest {}
+message TakePendingDispatchResponse {
+  Dispatch dispatch = 1;
+  generics.Specialist specialist = 2;
+  generics.Patient patient = 3;
+}
+
+// GET /panel_api/dispatches/ongoing_dispatch
+//
+// Returns current ongoing dispatch of nurse
+// scopes: NURSE
+message GetOngoingDispatchResponse {
+  Dispatch dispatch = 1;
+  generics.Specialist specialist = 2;
+  generics.Patient patient = 3;
+}
+
+// POST /panel_api/dispatches/<request_id>/end_dispatch
+//
+// scopes: NURSE
+message EndDispatchRequest {}
+message EndDispatchResponse {}
+
+// GET /panel_api/dispatches/current_dispatches
+//
+// Returns union of pending and ongoing dispatches
+// scopes: GP
+message GetCurrentDispatchesResponse {
+  repeated DetailedDispatch detailed_dispatches = 1;
+  repeated generics.Specialist specialists = 2;
+}
+
+// GET /panel_api/dispatches/ended_dispatches?next_token=<next_token>&sort_by=<field_name>&order=<order>
+//
+// Scopes: GP
+//
+// Params:
+// * sort_by (optional) - used to sort by provided field - accepted values:
+//  'requested_at', 'taken_at', 'ended_at'
+// * order (optional) - used if sort_by is provided - accepted values:
+//  'asc', 'desc'
+// * next_token (optional) - used to fetch next page; when set to "" or missing
+//  first page will be returned; non-empty next_token overrides `sort_by` and `order` params
+message GetEndedDispatchesResponse {
+  repeated DetailedDispatch detailed_dispatches = 1;
+  string next_token = 2;
+  uint32 total_count = 3; // total count of all ended dispatches in database
+  repeated generics.Specialist specialists = 4;
+}
+
+// GET /panel_api/dispatches/<request_id>/details
+//
+// Scopes: GP
+message GetDispatchDetailsResponse {
+  DetailedDispatch detailed_dispatch = 1;
+  generics.Specialist specialist = 2;
+  generics.Patient patient = 3;
+}
+
+// CHANNEL PAYLOAD
+message PendingDispatchesUpdate {
+  repeated Dispatch dispatches = 1;
+  repeated generics.Specialist specialists = 2;
+  repeated generics.Patient patients = 3;
+}
+
+message Dispatch {
+  string request_id = 1;
+  uint64 requested_at = 2; // when dispatch was requested
+  uint64 patient_id = 3;
+  uint64 requester_id = 4; // id of specialist who requested dispatch
+  uint64 record_id = 5;
+  PatientLocation patient_location = 6;
+}
+
+message DetailedDispatch {
+  enum Status {
+    UNKNOWN = 0;
+    OPEN = 1;
+    ONGOING = 2;
+    ENDED = 3;
+  }
+
+  Dispatch dispatch = 1;
+  Status status = 2;
+  generics.DateTime taken_at = 3;
+  generics.DateTime ended_at = 4;
+  uint64 nurse_id = 5;
+}
+
+message PatientLocation {
+  message Address {
+    string country = 1;
+    string city = 2;
+    string postal_code = 3;
+    string street_name = 4;
+    string building_number = 5;
+    string district = 6;
+    string additional_numbers = 7;
+  }
+
+  Address address = 1;
+}

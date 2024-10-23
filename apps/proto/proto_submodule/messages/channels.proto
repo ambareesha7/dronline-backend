@@ -1,0 +1,175 @@
+syntax = "proto3";
+
+package proto.channels;
+
+import "calls.proto";
+import "dispatches.proto";
+import "elixir.proto";
+import "emr.proto";
+import "generics.proto";
+import "membership.proto";
+import "notifications.proto";
+import "presence.proto";
+import "timeline.proto";
+import "visits.proto";
+
+option (elixir_module_prefix) = "Proto.Channels";
+
+// GET /api/channels_token
+// GET /panel_api/channels_token
+//
+// Used in channels instead of x-auth-token, because phoenix channels don't support headers
+message GetTokenResponse {
+  string token = 1;
+}
+
+// GET /channels/websocket?token=<token>&device_id=<device_id>
+//
+// Join params:
+// `token` - token from channels_token endpoint
+// `device_id` - unique id representing current device
+message SocketMessage {
+  string topic = 1; // channel topic
+  string event = 2; // always the same as oneof message in payload, e.g. "joined_channel"
+  ChannelPayload payload = 3; // message payload, note: not every event has payload
+  string ref = 4;
+  string join_ref = 5;
+  string reply_status = 6;
+
+  message ChannelPayload {
+    message JoinedChannel {
+    }
+
+    oneof message {
+      // Sent when successfully joined channel
+      //
+      // MUST be a first message after joining
+      JoinedChannel joined_channel = 1;
+
+      // Reply from channel, e.g. "unmatched topic"
+      string phx_reply = 2;
+
+      ///////// MESSAGES TO BACKEND /////////
+
+      // Append caller to queue of patients waiting for GP
+      // Channels: "patient"
+      calls.JoinQueue join_queue = 3;
+
+      // Remove caller from queue of patients waiting for GP
+      // Channels: "patient"
+      calls.LeaveQueue leave_queue = 4;
+
+      // Append caller to queue of nurses waiting for GP
+      // Channels: "nurse"
+      calls.CallGP call_gp = 27;
+
+      // Remove caller from queue of nurses waiting for GP
+      // Channels: "nurse"
+      calls.CancelCallToGP cancel_call_to_gp = 28;
+
+      // Start call with nurse
+      // Channels: "gp"
+      calls.AnswerCallFromNurse answer_call_from_nurse = 30;
+
+      // Start call with GP
+      // Channels: "gp"
+      calls.StartCall start_call = 7;
+
+      // Append caller to queue of nurses/gps waiting for doctor category
+      // Doctor will be added to existing call
+      // Channels: "call:CALL_ID"
+      calls.InviteDoctorCategory invite_doctor_category = 35;
+
+      // DEPRECATED
+      calls.InviteDoctor invite_doctor = 21;
+
+      // Remove caller from queue of nurses/gps waiting for doctor
+      // Channels: "call:CALL_ID"
+      calls.CancelDoctorCategoryInvitation cancel_doctor_category_invitation = 36;
+
+      // DEPRECATED
+      calls.CancelCallToDoctor cancel_call_to_doctor = 20;
+
+      // Start call with doctor
+      // Channels: "doctor", "external"
+      calls.AcceptDoctorCategoryInvitation accept_doctor_category_invitation = 37;
+
+      // DEPRECATED
+      calls.AnswerCallToDoctor answer_call_to_doctor = 18;
+
+      // End call for all participants
+      // Channels: "call"
+      calls.EndCallForAll end_call_for_all = 23;
+
+      // Send patient's current location
+      // Channels: "call"
+      generics.Coordinates patient_location_coordinates = 25;
+
+      ///////// MESSAGES FROM BACKEND /////////
+
+      // Queue state update
+      // Channels: "gp"
+      calls.PatientsQueue patients_queue_update = 5;
+
+      // Pending calls state update
+      // Channels: "gp"
+      calls.PendingNurseToGPCalls pending_nurse_to_gp_calls_update = 29;
+
+      // Queue state update
+      // Channels: "doctor", "external"
+      calls.DoctorCategoryInvitations doctor_category_invitations_update = 38;
+      // DEPRECATED
+      calls.QueueToDoctor queue_to_doctor_update = 17;
+
+      // Server sends tokbox session token to all participants
+      // Channels: "gp", "nurse", "doctor", "external"
+      calls.CallEstablished call_established = 8;
+
+      // New item was added to timeline
+      // Channel: "record:<record_id>"
+      timeline.NewTimelineItem new_timeline_item = 16;
+
+      // New comment was added to timeline item
+      // Channel: "record:<record_id>"
+      emr.NewTimelineItemComment new_timeline_item_comment = 39;
+
+      // Active package has been updated
+      // Channels: "external"
+      membership.ActivePackageUpdate active_package_update = 22;
+
+      // Call has ended, all clients should disconnected
+      // Channels: "call"
+      calls.CallEnded call_ended = 24;
+
+      // List of pending dispatches was changed
+      // Channels: "nurse"
+      dispatches.PendingDispatchesUpdate pending_dispatches_update = 26;
+
+      // Initial list of present doctors
+      // Channel: "doctor_presence"
+      presence.PresenceState presence_state = 31;
+
+      // Differences between current state and previous one
+      // Contains joins and leaves of doctor devices
+      // Channel: "doctor_presence"
+      presence.PresenceDiff presence_diff = 32;
+
+      // Channel: "gp"
+      visits.PendingVisitsUpdate pending_visits_update = 33;
+
+      // Channel: "doctor", "external"
+      visits.DoctorPendingVisitsUpdate doctor_pending_visits_update = 34;
+
+      // Channel: "notifications"
+      notifications.NewNotification new_notification = 40;
+
+      ///////// FOR DEVELOPMENT PURPOSE /////////
+
+      // For development purposes, will be ansered by server with "pong"
+      string ping = 101;
+
+      // For development purposes, answer to "ping"
+      string pong = 102;
+    }
+  }
+}

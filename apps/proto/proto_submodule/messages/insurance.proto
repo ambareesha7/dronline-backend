@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package insurance;
+
+import "elixir.proto";
+
+option (elixir_module_prefix) = "Proto.Insurance";
+
+// GET /api/insurance_providers?country="us"
+message GetProvidersResponse {
+    repeated Provider providers = 1;
+}
+
+message Provider {
+    uint32 id = 1;
+    string name = 2;
+    string logo_url = 3;
+}

@@ -1,0 +1,76 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# GitHub recommends pinning actions to a commit SHA.
+# To get a newer version, you will need to update the SHA.
+# You can also reference a tag or branch, but the action may change without warning.
+
+name: Build and Deploy to production
+
+on:
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT }}
+  GKE_CLUSTER: dronline-prod-v2
+  GKE_ZONE: europe-west1-b
+  REGISTRY_ZONE: europe-west1
+  IMAGE: dronline-backend
+  ELIXIR_VERSION: 1.15
+
+jobs:
+  setup_build_publish_deploy:
+    name: Setup, Build, Publish, and Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - uses: benjlevesque/short-sha@v2.2
+      id: short-sha
+      with:
+        length: 8
+
+    - uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+    # Setup gcloud CLI
+    - uses: google-github-actions/setup-gcloud@1bee7de035d65ec5da40a31f8589e240eba8fde5
+      with:
+        project_id: ${{ secrets.GCP_PROJECT }}
+
+    # Configure Docker to use the gcloud command-line tool as a credential
+    # helper for authentication
+    - run: |-
+        gcloud --quiet auth configure-docker ${{ env.REGISTRY_ZONE }}-docker.pkg.dev
+
+    # Get the GKE credentials so we can deploy to the cluster
+    - uses: google-github-actions/get-gke-credentials@db150f2cc60d1716e61922b832eae71d2a45938f
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER }}
+        location: ${{ env.GKE_ZONE }}
+
+    # Build the Docker image
+    - name: Build
+      run: |-
+        echo -n "${{ env.ELIXIR_VERSION }}-${{ env.SHA }}" > VERSION
+
+        docker build . \
+          -t ${{ env.REGISTRY_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/dronline/${{ env.IMAGE }}:${{ env.SHA }} \
+          --build-arg RELEASE_NAME=app \
+          --build-arg ELIXIR_VERSION="${ELIXIR_VERSION}"
+
+    # Push the Docker image to Google Artifact Registry
+    - name: Publish
+      run: docker push ${{ env.REGISTRY_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/dronline/${{ env.IMAGE }}:${{ env.SHA }}
+
+    # Deploy the Docker image to the GKE cluster
+    - name: Deploy
+      run: |-
+        kubectl set image deployment -n dronline-prod dronline-backend dronline-backend="${{ env.REGISTRY_ZONE }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/dronline/${{ env.IMAGE }}:${{ env.SHA }}" --record
+        kubectl rollout status -n dronline-prod deployment/dronline-backend

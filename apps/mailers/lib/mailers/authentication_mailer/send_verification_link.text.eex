@@ -1,0 +1,8 @@
+We’ve received your email
+
+Please, click the following link to confirm your email address and complete creating account in DrOnline.
+<%= link %>
+
+If it was a mistake, just ignore this email.
+
+<%= footer_text() %>

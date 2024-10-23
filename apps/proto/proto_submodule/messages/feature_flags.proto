@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package feature_flags;
+
+import "elixir.proto";
+
+option (elixir_module_prefix) = "Proto.FeatureFlags";
+
+// GET /public_api/feature_flags/verify/:flag_name
+message VerifyResponse {
+    bool enabled = 1;
+}

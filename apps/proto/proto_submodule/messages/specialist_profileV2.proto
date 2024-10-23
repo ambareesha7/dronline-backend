@@ -1,0 +1,208 @@
+syntax = "proto3";
+
+package specialist_profileV2;
+
+import "elixir.proto";
+import "generics.proto";
+import "medical_categories.proto";
+import "specialist_profile.proto";
+import "visits.proto";
+
+option (elixir_module_prefix) = "Proto.SpecialistProfileV2";
+
+// *********** REQUESTS ***********
+
+// GET /panel_api/profile/v2/basic_info
+message GetBasicInfoResponseV2 {
+  BasicInfoV2 basic_info = 1;
+}
+
+// PUT /panel_api/profile/v2/basic_info
+message UpdateBasicInfoRequestV2 {
+	BasicInfoV2 basic_info = 1;
+	}
+
+message UpdateBasicInfoResponseV2 {
+	BasicInfoV2 basic_info = 1;
+}
+
+// GET /panel_api/profile/v2/description
+message GetProfileDescriptionResponseV2 {
+  ProfileDescriptionV2 profile_description = 1;
+}
+
+// PUT /panel_api/profile/v2/description
+message UpdateProfileDescriptionRequestV2 {
+  ProfileDescriptionV2 profile_description = 1;
+	}
+
+message UpdateProfileDescriptionResponseV2 {
+  ProfileDescriptionV2 profile_description = 1;
+}
+
+// GET /panel_api/profile/v2/education
+message GetEducationResponseV2 {
+  repeated EducationEntryV2 education = 1;
+}
+
+// PUT /panel_api/profile/v2/education
+message UpdateEducationRequestV2 {
+  repeated EducationEntryV2 education = 1;
+}
+
+message UpdateEducationResponseV2 {
+  repeated EducationEntryV2 education = 1;
+}
+
+// GET /panel_api/profile/v2/work_experience
+message GetWorkExperienceV2 {
+	repeated WorkExperienceEntryV2 work_experience = 1;
+}
+
+// PUT /panel_api/profile/v2/work_experience
+message UpdateWorkExperienceRequestV2 {
+	repeated WorkExperienceEntryV2 work_experience = 1;
+}
+
+message UpdateWorkExperienceResponseV2 {
+	repeated WorkExperienceEntryV2 work_experience = 1;
+}
+
+// GET /panel_api/profile/v2/medical_info
+message GetMedicalInfoResponseV2 {
+  MedicalInfoV2 medical_info = 1;
+}
+
+// PUT /panel_api/profile/v2/medical_info
+message UpdateMedicalInfoRequestV2 {
+  MedicalInfoV2 medical_info = 1;
+}
+message UpdateMedicalInfoResponseV2 {
+  MedicalInfoV2 medical_info = 1;
+}
+
+// GET /panel_api/profile/v2/insurance_providers
+// GET /api/specialists/<specialist_id>/insurance_providers
+message GetInsuranceProvidersV2 {
+	repeated InsuranceProvidersEntryV2 insurance_providers = 1;
+  MatchingInsuranceProviderV2 matching_provider = 2;
+}
+
+// PUT /panel_api/profile/v2/insurance_providers
+message UpdateInsuranceProvidersRequestV2 {
+	repeated InsuranceProvidersEntryV2 insurance_providers = 1;
+}
+
+message UpdateInsuranceProvidersResponseV2 {
+	repeated InsuranceProvidersEntryV2 insurance_providers = 1;
+}
+
+// GET /landing_api/specialists_search
+message SpecialistsSearchResponse {
+  repeated SearchSpecialist specialists = 1;
+  string next_token = 2;
+}
+
+// GET /api/specialists
+// GET /api/specialists?ids=[] for returning by specialists' ids
+// GET /api/specialists?lat=<latitude>&lon=<longitude> for returning by patient's location
+// GET /api/specialists?medical_category_id=<medical_category_id> for returning by category id
+//
+// Params:
+// * ids (optional) - used to fetch only by given specialists' ids
+// * lat, lon (optional) - used to filter results by patient's location and radius
+// * medical_category_id (optional) - used to filter results by medical category id
+//
+message GetDetailedSpecialistsResponse {
+  repeated DetailedSpecialist detailed_specialists = 1;
+}
+
+// *********** DATA STRUCTS ***********
+
+message BasicInfoV2 {
+  string first_name = 1;
+  string last_name = 2;
+  generics.Gender gender = 3;
+  generics.DateTime birth_date = 4;
+  string profile_image_url = 5;
+  generics.MedicalTitle medical_title = 7;
+  string phone_number = 8;
+	AddressV2 address = 9;
+}
+
+message AddressV2 {
+  string street = 1;
+  string number = 2;
+  string postal_code = 3;
+  string city = 4;
+  string country = 5;
+  string neighborhood = 6;
+  string formatted_address = 7;
+  generics.Coordinates coordinates = 8;
+}
+
+message ProfileDescriptionV2 {
+	string description = 1;
+}
+
+message EducationEntryV2 {
+  string school = 1;
+  string field_of_study = 2;
+  string degree = 3;
+  uint32 start_year = 4;
+  uint32 end_year = 5; // 0 if still in progress
+}
+
+message WorkExperienceEntryV2 {
+  string institution = 1;
+  string position = 2;
+  uint32 start_year = 3;
+  uint32 end_year = 4; // 0 if still in progress
+}
+
+message MedicalInfoV2 {
+  MedicalCredentialsV2 medical_credentials = 1;
+  repeated medical_categories.MedicalCategoryBase medical_categories = 2;
+}
+
+message MedicalCredentialsV2 {
+  string board_certification_url = 1;
+  generics.DateTime board_certification_expiry_date = 2;
+
+  string current_state_license_number_url = 3;
+  generics.DateTime current_state_license_number_expiry_date = 4;
+}
+
+message InsuranceProvidersEntryV2 {
+  uint64 id = 1;
+  string name = 2;
+  string country_id = 3;
+}
+
+message MatchingInsuranceProviderV2 {
+  uint64 id = 1;
+  string name = 2;
+}
+
+message SearchSpecialist {
+  uint64 id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string avatar_url = 4;
+  generics.Specialist.Type type = 5;
+  generics.Specialist.Package package = 6;
+  repeated generics.Specialist.MedicalCategory medical_categories = 7;
+  generics.MedicalTitle medical_title = 8;
+  AddressV2 location = 9;
+  repeated specialist_profile.CategoryPricesResponse categories_prices = 10;
+  repeated visits.DaySchedule day_schedules = 11;
+  repeated InsuranceProvidersEntryV2 insurance_providers = 12;
+}
+
+message DetailedSpecialist {
+  generics.Specialist specialist_generic_data = 1;
+  repeated specialist_profile.CategoryPricesResponse prices = 2;
+  repeated visits.Timeslot timeslots = 3;
+  repeated InsuranceProvidersEntryV2 insurance_providers = 4;
+  MatchingInsuranceProviderV2 matching_provider = 5;
+}

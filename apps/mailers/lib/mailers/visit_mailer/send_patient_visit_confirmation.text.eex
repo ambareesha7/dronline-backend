@@ -1,0 +1,9 @@
+Hello!
+
+Thank you for booking the appointment.
+Once the payment is made, the confirmation notice will be sent to you via email within 24 hours of receipt of payment.
+
+Best Regards, DrOnline Team
+PS: Our team works tirelessly to improve healthcare accessibility and quality worldwide. If you have any feedback, please, let us know!
+
+<%= footer_text() %>

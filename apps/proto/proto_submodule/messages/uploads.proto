@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package uploads;
+
+import "elixir.proto";
+
+option (elixir_module_prefix) = "Proto.Uploads";
+
+// GET /admin_api/upload/profile_image_url?file_name=<file_name>&content_type=<content_type>
+// GET /panel_api/upload/profile_image_url?file_name=<file_name>&content_type=<content_type>
+// GET /landing_api/upload/second_opinion_file_url?file_name=<file_name>&content_type=<content_type>
+message UploadResponse {
+  string upload_url = 1;
+  string download_url = 2;
+}
+
+// GET /api/upload/file_upload_url?file_name=<file_name>&content_type=<content_type>
+//
+// When uploading file (PUT request) following headers are mandatory:
+//  * `content-type` with same value as provided to generate upload url
+//  * `x-goog-acl:private`
+// 
+// POST /api/upload/file_upload_url/visit
+message GetFileUploadUrlResponse {
+  string upload_url = 1; // upload file to this url
+  string resource_path = 2; // provide this in request to backend after successful file upload
+}
+
+// POST /api/upload/file_upload_url/visit
+message PostDocumentToVisitRequest {
+  string file_name = 1;
+  string content_type = 2;
+  uint64 record_id = 3;
+}

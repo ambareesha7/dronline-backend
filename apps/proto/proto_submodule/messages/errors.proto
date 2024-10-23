@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package errors;
+
+import "elixir.proto";
+
+option (elixir_module_prefix) = "Proto.Errors";
+
+// Universal error response
+message ErrorResponse {
+  SimpleError simple_error = 1;
+  // form errors are also converted to single string stored in `simple_error` field for easier displaing
+  FormErrors form_errors = 2;
+}
+
+// Message used when there's single error text to display
+message SimpleError {
+  string message = 1;
+}
+
+// Message used to return form errors
+message FormErrors {
+  message FieldError {
+    string field = 1;
+    string message = 2;
+  }
+
+  repeated FieldError field_errors = 1;
+}

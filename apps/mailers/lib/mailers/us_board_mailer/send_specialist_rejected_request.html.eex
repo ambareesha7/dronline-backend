@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<%= head_html(css) %>
+
+<body>
+    <%= header_html(sign_in: false) %>
+
+    <div class="content center">
+        <div class="banner">
+            <img class="banner-image" src="https://storage.googleapis.com/dronline-prod/images/mailer_content/banner_patient_invitation.png" />
+        </div>
+        <h1 class="title">
+           Specialist rejected the request
+        </h1>
+        <section>
+            <table class="card">
+                <tbody>
+                <tr>
+                    <td class="card-description">
+                        <p>The Specialist has rejected your request</p>
+
+                        <p>Search for new Specialist</p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <%= footer_html() %>
+</body>
+</html>

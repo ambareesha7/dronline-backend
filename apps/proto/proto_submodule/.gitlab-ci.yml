@@ -1,0 +1,67 @@
+stages:
+  - build
+  - build_docs
+  - deploy_docs
+
+variables:
+  REGISTRY_NAME: registry.appunite.com
+  IMAGE_NAME: registry.appunite.com/dronline-images/dronline-protobuf-docs
+
+build_proto_elixir:
+  stage: build
+  image: amatalai/elixir:1.7.1-otp-21-ci
+  before_script:
+    - apt-get update
+    - apt-get install protobuf-compiler libprotobuf-dev -y
+    - mix escript.install github tony612/protobuf-elixir ref 5d4ed2b --force
+    - export PATH=$PATH:/root/.mix/escripts
+  script:
+    ./compile-elixir.sh
+  tags:
+    - k8s
+
+build_proto_dart:
+  stage: build
+  image: google/dart:2.2.1-dev.2.0
+  variables:
+    PROTOC: https://github.com/google/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip
+  before_script:
+    - apt-get update
+    - apt-get install wget unzip -y
+    - wget $PROTOC -O $HOME/protoc
+    - unzip $HOME/protoc -x readme.txt -d /
+    - cp -r /include/* extensions
+    - pub global activate protoc_plugin
+    - export PATH=$PATH:$HOME/.pub-cache/bin
+  script:
+    ./compile-dart.sh
+  tags:
+    - k8s
+
+docker:
+  image: docker:18 # Change to docker:stable when this error is gone: (client version 1.40 is too new. Maximum supported API version is 1.39)
+  stage: build_docs
+  only:
+    - master
+  script:
+    - apk add --no-cache ca-certificates
+    - rm -rf /etc/ssl/certs/ && mkdir -p /etc/ssl/certs/ && update-ca-certificates --fresh
+    - docker version
+    - docker build -t "$IMAGE_NAME:${CI_COMMIT_SHA:0:8}" .
+    - docker login -u admin -p $APPUNITE_CI_BUILD_TOKEN $REGISTRY_NAME
+    - docker push "$IMAGE_NAME:${CI_COMMIT_SHA:0:8}"
+  tags:
+    - privileged
+
+deploy:
+  image: lwolf/kubectl_deployer:latest
+  stage: deploy_docs
+  environment:
+    name: development
+  only:
+    - master
+  script:
+    - kubectl config use-context gitlab-deploy
+    - kubectl set image deployment dronline-protobuf-docs dronline-protobuf-docs="$IMAGE_NAME:${CI_COMMIT_SHA:0:8}" --record
+  tags:
+    - k8s

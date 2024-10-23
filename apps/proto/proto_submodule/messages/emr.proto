@@ -1,0 +1,671 @@
+syntax = "proto3";
+
+package emr;
+
+import "elixir.proto";
+import "forms.proto";
+import "generics.proto";
+import "patient_profile.proto";
+import "visits.proto";
+
+option (elixir_module_prefix) = "Proto.EMR";
+
+// GET /panel_api/emr/patients/connected?next_token=<next_token>&filter=<filter> for externals
+// GET /panel_api/emr/patients?next_token=<next_token>&filter=<filter> for other specialists
+//
+// Returns max 20 entries. Count may vary if some entries will be rejected on backend side.
+//
+// Params:
+// * next_token (optional) - used to fetch next page; when set to 0 or missing first page will be returned
+// * filter (optional) - used to filter results with patient provided values
+//                       currently supported: first_name, last_name, city, country
+//                       example: "?filter=Ahmed%20Dubai"
+message GetPatientsResponse {
+  repeated generics.Patient patients = 1;
+  string next_token = 2; // 0 when there's no more data to be fetched
+}
+
+// GET /api/emr/records?next_token=<next_token>&status=<status>
+// GET /panel_api/emr/patients/<patient_id>/records?next_token=<next_token>&status=<status>
+//
+// Returns max 20 entries. Count may vary if some entries will be rejected on backend side.
+//
+// Params:
+// * next_token (optional) - used to fetch next page; when set to 0 or missing first page will be returned
+// * status (optional) - `ONGOING`, `ENDED`
+message GetPatientRecordsResponse {
+  repeated PatientRecord patient_records = 1;
+  string next_token = 2; // 0 when there's no more data to be fetched
+  repeated generics.Specialist specialists = 3;
+}
+
+// GET /api/emr/records/<record_id>
+// GET /panel_api/emr/patients/<patient_id>/records/<record_id>
+message GetPatientRecordResponse {
+  PatientRecord patient_record = 1;
+  repeated generics.Specialist specialists = 2;
+}
+
+// POST /panel_api/emr/patients/<patient_id>/records
+message CreateMedicalRecordRequest {
+}
+
+message CreateMedicalRecordResponse {
+  PatientRecord patient_record = 1;
+  repeated generics.Specialist specialists = 2;
+}
+
+// POST /panel_api/emr/patients/invite
+message InvitePatientRequest {
+  Invitation invitation = 1;
+}
+
+// POST /panel_api/emr/patients
+message CreatePatientRequest {
+  string firebase_token = 1;
+}
+
+message CreatePatientResponse {
+  uint64 patient_id = 1;
+}
+
+
+// POST /panel_api/emr/patients/<patient_id>/records/<record_id>/close
+// Body of this request will be ignored
+
+
+// GET /api/emr/records/<record_id>/pdf
+// GET /panel_api/emr/patients/<patient_id>/records/<record_id>/pdf
+// Body of this request will be ignored
+// Request should have "accept: application/pdf" header
+
+
+// POST /panel_api/emr/patients/<patient_id>/records/<record_id>/medical_summaries
+//
+// `request_uuid` has to be unique for each call that a specialist makes
+// It's used to be able to correct the summary that was provided during the call
+message AddMedicalSummaryRequest {
+  MedicalSummaryData medical_summary_data = 1;
+  string request_uuid = 2;
+  repeated string conditions = 3;
+  repeated string procedures = 4;
+  bool skip_patient_notification = 5;
+}
+
+// POST /panel_api/emr/patients/<patient_id>/records/<record_id>/medical_summaries/create_draft
+message AddMedicalSummaryDraftRequest {
+  MedicalSummaryData medical_summary_data = 1;
+  repeated string conditions = 2;
+  repeated string procedures = 3;
+}
+
+
+// POST /panel_api/emr/patients/<patient_id>/records/<record_id>/medical_summaries/skip
+// Body of this request will be ignored
+
+
+// GET /api/emr/records/<record_id>/medical_summaries
+// GET /panel_api/emr/patients/<patient_id>/records/<record_id>/medical_summaries
+// Returns the newest at the beginning of the list
+message GetMedicalSummariesResponse {
+  repeated MedicalSummary medical_summaries = 1;
+  repeated generics.Specialist specialists = 2;
+}
+
+// GET /api/emr/records/<record_id>/medical_summaries/<medical_summary_id>
+message GetMedicalSummaryResponse {
+  MedicalSummary medical_summary = 1;
+  generics.Specialist specialist = 2;
+}
+
+// GET /api/emr/records/<record_id>/specialists
+message GetRecordSpecialistsResponse {
+  repeated Specialist deprecated = 1; //DEPRECATED
+  repeated generics.Specialist specialists = 2;
+}
+
+// GET /api/emr/records/<record_id>/hpi
+// GET /panel_api/emr/patients/<patient_id>/records/<record_id>/hpi
+message GetHPIResponse {
+  HPI hpi = 1;
+}
+
+// GET /api/emr/records/<record_id>/hpi/history
+// GET /panel_api/emr/patients/<patient_id>/records/<record_id>/hpi/history
+message GetHPIHistoryResponse {
+  repeated HPI hpis = 1;
+}
+
+// PUT /api/emr/records/<record_id>/hpi
+// PUT /panel_api/emr/patients/<patient_id>/records/<record_id>/hpi
+message UpdateHPIRequest {
+  forms.Form hpi = 1;
+}
+message UpdateHPIResponse {
+  HPI hpi = 1;
+}
+
+// GET /api/emr/records/<record_id>/visits?next_token=<next_token>&status=<status>
+//
+// Params:
+// * next_token (optional) - used to fetch next page; when set to 0 or missing first page will be returned
+// * status (optional) - used to filter by status, values: 'SCHEDULED', 'ONGOING', 'DONE', 'CANCELED'
+message GetRecordVisitsResponse {
+  repeated visits.VisitDataForPatient visits = 1;
+  string next_token = 2; // 0 when there's no more data to be fetched
+}
+
+// DEPRECATED
+// GET /api/emr/records/<record_id>/results/bmi_entries?next_token=<next_token>
+//
+// Params:
+// * next_token (optional) - used to fetch next page; when set to "" or missing first page will be returned
+message GetRecordBMIEntriesResponse {
+  message BMIEntry {
+    patient_profile.BMI bmi = 1;
+    uint64 inserted_at = 2; // unix timestamp in seconds
+  }
+
+  repeated BMIEntry bmi_entries = 1;
+  string next_token = 2; // "" when there's no more data to be fetched
+}
+
+// DEPRECATED
+// GET /api/emr/records/<record_id>/results/blood_pressure_entries?next_token=<next_token>
+//
+// Params:
+// * next_token (optional) - used to fetch next page; when set to "" or missing first page will be returned
+message GetRecordBloodPressureEntriesResponse {
+  message BloodPressureEntry {
+    patient_profile.BloodPressure blood_pressure = 1;
+    uint64 inserted_at = 2; // unix timestamp in seconds
+  }
+
+  repeated BloodPressureEntry blood_pressure_entries = 1;
+  string next_token = 2; // "" when there's no more data to be fetched
+}
+
+// GET /api/emr/records/<record_id>/call_recordings?next_token=<next_token>
+//
+// Params:
+// * next_token (optional) - used to fetch next page; when set to "" or missing first page will be returned
+message GetRecordCallRecordingsResponse {
+  message CallRecording {
+    string video_url = 1;
+    string thumbnail_url = 2;
+    string session_id = 3;
+    uint64 inserted_at = 4; // unix timestamp in seconds
+  }
+
+  repeated CallRecording call_recordings = 1;
+  string next_token = 2; // "" when there's no more data to be fetched
+}
+
+// GET /panel_api/emr/pending_medical_summary
+message GetPendingMedicalSummaryResponse {
+  message PendingMedicalSummary {
+    uint64 record_id = 1;
+    uint64 patient_id = 2;
+  }
+
+  PendingMedicalSummary pending_medical_summary = 1;
+
+  uint64 patient_id = 2;
+  MedicalSummaryDraft medical_summary_draft = 3;
+}
+
+// GET /panel_api/emr/encounters
+message SpecialistEncountersResponse {
+  repeated SpecialistEncounter encounters = 1;
+  repeated generics.Patient patients = 2;
+  string next_token = 3;
+}
+
+// GET /panel_api/emr/encounters/:id
+message SpecialistEncounterResponse {
+  SpecialistEncounter encounter = 1;
+  generics.Patient patient = 2;
+}
+
+// GET /panel_api/emr/encounters/stats
+message SpecialistEncountersStatsResponse {
+  uint64 scheduled = 1;
+  uint64 pending = 2;
+  uint64 completed = 3;
+  uint64 canceled = 4;
+}
+
+// POST /panel_api/emr/patients/<patient_id>/records/<record_id>/timeline_items/<timeline_item_id>/comments
+message CreateTimelineItemCommentRequest {
+  string body = 1;
+}
+message CreateTimelineItemCommentResponse {
+  TimelineItemComment timeline_item_comment = 1;
+  generics.Specialist specialist = 2;
+  uint32 updated_comments_counter = 3;
+}
+
+// CHANNEL PAYLOAD
+message NewTimelineItemComment{
+  uint64 patient_id = 1;
+  uint64 record_id = 2;
+  string timeline_item_id = 3;
+  TimelineItemComment timeline_item_comment = 4;
+  generics.Specialist specialist = 5;
+  uint32 updated_comments_counter = 6;
+}
+
+// GET /panel_api/emr/patients/<patient_id>/records/<record_id>/timeline_items/<timeline_item_id>/comments?next_token=<next_token>
+message GetTimelineItemCommentsResponse {
+  repeated TimelineItemComment timeline_item_comments = 1;
+  repeated generics.Specialist specialists = 2;
+  string next_token = 3;
+  uint32 total_comments_counter = 4;
+}
+
+// POST /panel_api/emr/patients/<patient_id>/records/<record_id>/vitals
+message CreateNewVitalsRequest {
+  VitalsParams vitals_params = 1;
+}
+message CreateNewVitalsResponse{
+  Vitals vitals = 1;
+  repeated generics.Specialist specialists = 2;
+}
+
+// POST /panel_api/emr/patients/<patient_id>/records/<record_id>/ordered_tests
+message CreateOrderedTestsRequest {
+  repeated OrderedTestsParamsItem items = 1;
+}
+message CreateOrderedTestsResponse{
+  repeated OrderedTestsItem items = 1;
+  repeated generics.Specialist specialists = 2;
+}
+
+// POST /panel_api/emr/patients/<patient_id>/records/<record_id>/medications => 200, ""
+message AssignMedicationsRequest{
+  repeated MedicationsItem items = 1;
+}
+
+// GET /panel_api/emr/patients/<patient_id>/records/<record_id>/ordered_tests/history
+// GET /api/emr/records/<record_id>/ordered_tests/history
+message GetOrderedTestsHistoryResponse {
+  repeated TestsBundle bundles = 1;
+}
+
+// GET /panel_api/emr/patients/<patient_id>/records/<record_id>/medications/history
+// GET /api/emr/records/<record_id>/medications/history
+message GetMedicationsHistoryResponse {
+  repeated MedicationsBundle bundles = 1;
+}
+
+// GET /api/emr/vitals
+// GET /panel_api/emr/patients/<patient_id>/vitals
+message GetVitalsResponse {
+  Vitals vitals = 1;
+  repeated generics.Specialist specialists = 2;
+}
+
+// GET /api/emr/vitals/history?next_token=<next_token>
+// GET /api/emr/records/<record_id>/vitals/history?next_token=<next_token>
+// GET /panel_api/emr/patients/<patient_id>/vitals/history?next_token=<next_token>
+message GetVitalsHistoryResponse {
+  repeated Vitals vitals_history = 1;
+  repeated generics.Specialist specialists = 2;
+  string next_token = 3;
+}
+
+// GET /panel_api/emr/medical_library/conditions?filter=<filter>
+message GetMedicalConditionsRequest {
+  string filter = 1;
+}
+message GetMedicalConditionsResponse {
+  repeated MedicalCondition conditions = 1;
+}
+
+// GET /panel_api/emr/medical_library/procedures?filter=<filter>
+message GetMedicalProceduresRequest {
+  string filter = 1;
+}
+message GetMedicalProceduresResponse {
+  repeated MedicalProcedure procedures = 1;
+}
+
+// GET /panel_api/emr/medical_library/medications?filter=<filter>
+message GetMedicalMedicationsRequest {
+  string filter = 1;
+}
+message GetMedicalMedicationsResponse {
+  repeated MedicalMedication medications = 1;
+}
+
+// GET /panel_api/emr/medical_library/tests_by_categories
+message GetMedicalTestsByCategoriesResponse {
+  repeated MedicalTestsCategory categories = 1;
+}
+
+message TimelineItemComment {
+  string id = 1;
+  uint64 commented_by_specialist_id = 2;
+  string body = 3;
+  uint64 inserted_at = 4;
+}
+
+
+message MedicalSummary {
+  MedicalSummaryData medical_summary_data = 1;
+  uint64 specialist_id = 4;
+  uint64 inserted_at = 3; // unix timestamp in seconds
+  repeated MedicalCondition conditions = 5;
+  repeated MedicalProcedure procedures = 6;
+  bool is_draft = 7;
+  generics.DateTime edited_at = 8;
+}
+
+// GET /panel_api/emr/patients/<patient_id>/records/<record_id>/medical_summaries/show_draft
+message ShowMedicalSummaryDraftResponse {
+  MedicalSummaryDraft medical_summary_draft = 1;
+}
+
+// GET /panel_api/emr/patients/<patient_id>/records/<record_id>/medical_summaries/latest_for_specialist
+message GetLatestMedicalSummaryResponse {
+  MedicalSummary medical_summary = 1;
+}
+
+message MedicalSummaryDraft {
+  MedicalSummaryData medical_summary_data = 2;
+  repeated MedicalCondition conditions = 3;
+  repeated MedicalProcedure procedures = 4;
+}
+
+message MedicalSummaryData {
+  string interview_summary = 1;
+
+  string diagnosis_category = 2;
+  string cpt_code = 3;
+
+  string plan = 4;
+  string impression = 5;
+
+  string diagnostic_testing = 6;
+}
+
+// DEPRECATED
+message Specialist {
+  enum Type {
+    UNKNOWN = 0;
+    GP = 1;
+    NURSE = 2;
+    EXTERNAL = 4; // external specialist; not DrOnline employee
+  }
+
+  enum PackageType {
+    UNKOWN_PACKAGE = 0;
+    BASIC = 1;
+    SILVER = 2;
+    GOLD = 3;
+    PLATINUM = 4;
+  }
+
+  Type type = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string avatar_url = 4;
+  repeated string medical_categories = 5;
+  PackageType package_type = 6;
+}
+
+message PatientRecord {
+  // DEPRECATED
+  message Automatically {}
+
+  // DEPRECATED
+  message Specialist {
+    uint64 specialist_id = 1;
+    string first_name = 2;
+    string last_name = 3;
+    string avatar_url = 4;
+  }
+
+  uint64 record_id = 1;
+  generics.DateTime start_date = 2;
+  generics.DateTime end_date = 3;
+  bool medical_summary_provided = 4;
+
+  // DEPRECATED
+  oneof created {
+    Automatically automatically = 5;
+    Specialist by_specialist = 6;
+  }
+
+  message Manually {
+    uint64 created_by_specialist_id = 1;
+    uint64 with_specialist_id = 2;
+  }
+
+  message Call {
+    uint64 with_specialist_id = 1;
+  }
+
+  // This kind of record is always created by patient himself
+  message Scheduled {
+    uint64 with_specialist_id = 1;
+  }
+
+  // This kind of record is always created by patient himself
+  message UrgentCare {
+    uint64 with_specialist_id = 1;
+  }
+
+  message USBoard {
+    uint64 with_specialist_id = 1;
+    string us_board_request_id = 2;
+  }
+
+  oneof type {
+    Manually manually = 7;
+    Scheduled scheduled = 8;
+    UrgentCare urgent_care = 9;
+    Call call = 12;
+    USBoard us_board = 13;
+  }
+
+  string insurance_provider_name = 10;
+  string insurance_member_id = 11;
+}
+
+message Invitation {
+  generics.Title title = 1;
+  string first_name = 2;
+  string last_name = 3;
+
+  string phone_number = 4;
+  string email = 5;
+}
+
+message HPI {
+  forms.Form form = 1;
+  generics.DateTime inserted_at = 2;
+}
+
+message VitalsParams {
+  generics.Height height = 1;
+  generics.Weight weight = 2;
+
+  uint32 blood_pressure_systolic = 3;
+  uint32 blood_pressure_diastolic = 4;
+  uint32 pulse = 5;
+
+  uint32 respiratory_rate = 6;
+  float body_temperature = 7;
+  string physical_exam = 8;
+}
+
+message OrderedTestsParamsItem {
+  uint64 medical_test_id = 1;
+  string description = 2;
+}
+
+message OrderedTests {
+  repeated OrderedTestsItem items = 1;
+}
+
+message OrderedTestsItem {
+  MedicalTest test = 1;
+  string description = 2;
+}
+
+message Medications {
+  repeated MedicationsItem items = 1;
+}
+
+message MedicationsItem {
+  string name = 1;
+  string direction = 2;
+  string quantity = 3;
+  uint32 refills = 4;
+  uint64 price_aed = 5; //without decimal points, so price_aed=100 equals 1 AED
+  string medication_id = 6;
+}
+
+message Vitals {
+  generics.Height height = 1;
+  generics.Weight weight = 2;
+
+  uint32 blood_pressure_systolic = 3;
+  uint32 blood_pressure_diastolic = 4;
+  uint32 pulse = 5;
+
+  uint32 respiratory_rate = 6;
+  float body_temperature = 7;
+  string physical_exam = 8;
+
+  uint64 record_id = 9;
+  uint64 provided_by_nurse_id = 10;
+
+  generics.DateTime inserted_at = 11;
+}
+
+message MedicalCondition {
+  string id = 1;
+  string name = 2;
+}
+
+message MedicalProcedure {
+  string id = 1;
+  string name = 2;
+}
+
+message MedicalMedication {
+  uint64 id = 1;
+  string name = 2;
+}
+
+message MedicalTestsCategory {
+  uint64 id = 1;
+  string name = 2;
+  repeated MedicalTest tests = 3;
+}
+
+message MedicalTest {
+  uint64 id = 1;
+  string name = 2;
+}
+
+message SpecialistEncounter {
+  enum Type {
+    UNKNOWN_TYPE = 0;
+    AUTO = 1;
+    MANUAL = 2;
+    VISIT = 3;
+    CALL = 4;
+    US_BOARD = 5;
+    IN_OFFICE = 6;
+  }
+
+  enum State {
+    UNKNOWN_STATE = 0;
+    PENDING = 1;
+    CANCELED = 2;
+    COMPLETED = 3;
+  }
+
+  uint64 id = 1;
+  uint64 patient_id = 2;
+  uint64 start_time = 3;
+  uint64 end_time = 4;
+  Type type = 5;
+  State state = 6;
+  string us_board_request_id = 7;
+}
+
+// GET /panel_api/emr/tests?next_token=<next_token>
+message GetTestsResponse {
+  repeated TestsBundle bundles = 1;
+  repeated generics.Specialist specialists = 2;
+  repeated generics.Patient patients = 3;
+  string next_token = 4;
+}
+
+// GET /api/emr/records/<record_id>/ordered_tests/<tests_bundle_id>
+message GetTestResponse {
+  TestsBundle bundle = 1;
+  generics.Specialist specialist = 2;
+}
+
+message TestsBundle {
+  uint64 specialist_id = 1;
+  uint64 patient_id = 2;
+  repeated Test tests = 3;
+  uint64 inserted_at = 4;
+}
+
+message Test {
+  string name = 1;
+  string category_name = 2;
+  string description = 3;
+}
+
+// GET /panel_api/emr/medications?next_token=<next_token>
+message GetMedicationsResponse {
+  repeated MedicationsBundle bundles = 1;
+  repeated generics.Specialist specialists = 2;
+  repeated generics.Patient patients = 3;
+  string next_token = 4;
+}
+
+// GET /api/emr/records/<record_id>/medications/<medications_bundle_id>
+message GetMedicationResponse {
+  MedicationsBundle bundle = 1;
+  generics.Specialist specialist = 2;
+}
+
+// PUT /api/emr/records/<record_id>/medications/<medications_bundle_id>/save_payment
+// Request: 
+message SaveMedicationPayments {
+  generics.PaymentsParams payments_params = 1;
+}
+
+message MedicationsBundle {
+  uint64 specialist_id = 1;
+  uint64 patient_id = 2;
+  repeated MedicationsItem medications = 3;
+  uint64 inserted_at = 4;
+  uint64 id = 5;
+  // Always null for panel_api/ endpoints. For api/ endpoints null only when no payment was made.
+  generics.PaymentsParams payments_params = 6;
+}
+
+// GET /panel_api/emr/procedures?next_token=<next_token>
+message GetProceduresResponse {
+  repeated ProceduresBundle bundles = 1;
+  repeated generics.Specialist specialists = 2;
+  repeated generics.Patient patients = 3;
+  string next_token = 4;
+}
+
+message ProceduresBundle {
+  uint64 specialist_id = 1;
+  uint64 patient_id = 2;
+  repeated string procedures = 3;
+  uint64 inserted_at = 4;
+}

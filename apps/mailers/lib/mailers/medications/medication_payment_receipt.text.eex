@@ -1,0 +1,8 @@
+Hello! <%=  patient_name %>
+
+Thank you for your payment.
+Please find the receipt attatched.
+
+Best Regards, DrOnline Team
+
+<%= footer_text() %>

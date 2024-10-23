@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<%= head_html(css) %>
+
+<body>
+    <%= header_html(sign_in: true) %>
+
+    <div class="content center">
+        <div class="banner">
+            <img class="banner-image" src="https://storage.googleapis.com/dronline-prod/images/mailer_content/banner_forgot_password.png" />
+        </div>
+        <h1 class="title">
+            Welcome to DrOnline
+        </h1>
+        <section>
+          <p>
+              Your application has been accepted!
+          </p>
+
+          <p>
+              Go to DrOnline and choose your membership. You can upgrade your plan anytime and gain more features.
+          </p>
+
+          <a href="<%= link %>" class="blue-button">
+              Choose Membership
+          </a>
+        </section>
+    </div>
+
+    <%= footer_html() %>
+</body>
+</html>

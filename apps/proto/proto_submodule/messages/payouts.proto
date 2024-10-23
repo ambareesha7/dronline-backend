@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package payouts;
+
+import "elixir.proto";
+import "generics.proto";
+
+option (elixir_module_prefix) = "Proto.Payouts";
+
+// GET /panel_api/payouts/credentials
+message GetCredentialsResponse {
+  Credentials credentials = 1;
+}
+
+// UPDATE /panel_api/payouts/credentials
+message UpdateCredentialsRequest {
+  Credentials credentials = 1;
+}
+
+message Credentials {
+    string iban = 1;
+    string name = 2;
+    string address = 3;
+    string bank_name = 4;
+    string bank_address = 5;
+    string bank_swift_code = 6;
+    string bank_routing_number = 7;
+}
+
+// GET /panel_api/payouts/pending_withdrawals
+message GetPendingWithdrawalsResponse {
+  repeated PendingWithdrawal pending_withdrawals = 1;
+  repeated generics.Patient patients = 2;
+}
+
+message PendingWithdrawal {
+  uint64 patient_id = 1;
+  uint64 medical_category_id = 2;
+  uint64 amount = 3;
+  uint64 inserted_at = 4;
+  uint64 record_id = 5;
+}
+
+// GET /panel_api/payouts/withdrawals_summary
+message GetWithdrawalsSummaryResponse {
+  WithdrawalsSummary withdrawals_summary = 1;
+}
+
+message WithdrawalsSummary {
+  uint64 incoming_withdraw = 1;
+  uint64 earned_this_month = 2;
+}

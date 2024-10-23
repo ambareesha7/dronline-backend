@@ -1,0 +1,245 @@
+stages:
+  - base_image
+  - compile
+  - test
+  - build
+  - deploy
+  - deploy-prod
+
+variables:
+  REGISTRY_NAME: registry.appunite.com
+  BACKEND_IMAGE_NAME: registry.appunite.com/dronline-images/dronline-backend
+  ELIXIR_IMAGE_NAME: registry.appunite.com/dronline-images/elixir-base
+  ELIXIR_VERSION: 1.12.3
+  POSTGIS_VERSION: "9.6-2.5"
+
+default:
+  image: "${ELIXIR_IMAGE_NAME}:${ELIXIR_VERSION}"
+
+#################### BASE ####################
+
+base_image:
+  stage: base_image
+  image: docker:stable
+  only:
+    - base-image
+  variables:
+    BASE_IMAGE: "${ELIXIR_IMAGE_NAME}:${ELIXIR_VERSION}"
+  before_script:
+    - apk add --no-cache ca-certificates
+    - rm -rf /etc/ssl/certs/ && mkdir -p /etc/ssl/certs/ && update-ca-certificates --fresh
+    - docker version
+    - docker login -u admin -p $APPUNITE_CI_BUILD_TOKEN $REGISTRY_NAME
+  script:
+    - docker build
+        -t "$BASE_IMAGE"
+        --build-arg ELIXIR_VERSION
+        --no-cache
+        - < "dockerfiles/BASE.dockerfile"
+
+    - docker push "$BASE_IMAGE"
+  tags:
+    - privileged
+
+#################### COMPILE ####################
+
+compile:
+  stage: compile
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - "*"
+  cache:
+    key:
+      files:
+        - mix.lock
+    untracked: true
+    policy: pull
+  before_script:
+    - ./scripts/clean_changed_apps.sh
+    - MIX_ENV=test mix deps.get
+  script:
+    - mix compile --warnings-as-errors
+    - MIX_ENV=test mix compile
+    - mix dialyzer --plt
+  tags:
+    - k8s
+
+#################### TEST ####################
+
+tests:
+  stage: test
+  variables:
+    GIT_STRATEGY: none
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+  services:
+    - postgis/postgis:${POSTGIS_VERSION}
+  before_script:
+    - MIX_ENV=test mix ecto.create -r Postgres.Repo
+    - MIX_ENV=test mix ecto.migrate
+  script:
+    - ./scripts/test_with_warnings_check.sh
+  dependencies:
+    - compile
+  tags:
+    - k8s
+
+formatting:
+  stage: test
+  script:
+    - mix format --check-formatted --dry-run
+  dependencies:
+    - compile
+  tags:
+    - k8s
+
+credo:
+  stage: test
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - mix credo
+  dependencies:
+    - compile
+  tags:
+    - k8s
+
+dialyzer:
+  stage: test
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - mix dialyzer --halt-exit-status
+  dependencies:
+    - compile
+  tags:
+    - k8s
+
+sobelow:
+  stage: test
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - ./scripts/run_sobelow.sh
+  dependencies:
+    - compile
+  tags:
+    - k8s
+
+modularity_check:
+  stage: test
+  variables:
+    GIT_STRATEGY: none
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+  services:
+    - postgis/postgis:${POSTGIS_VERSION}
+  before_script:
+    - MIX_ENV=test mix ecto.create -r Postgres.Repo
+    - MIX_ENV=test mix ecto.migrate
+  script:
+    - ./scripts/modularity_check.sh
+  dependencies:
+    - compile
+  tags:
+    - k8s
+
+#################### RELEASE ####################
+
+build_master:
+  stage: build
+  image: docker:19.03.8
+  only:
+    - master
+  before_script:
+    - docker version
+    - docker login -u admin -p $APPUNITE_CI_BUILD_TOKEN $REGISTRY_NAME
+  script:
+    - echo -n "$ELIXIR_VERSION-$CI_COMMIT_SHORT_SHA" > VERSION
+
+    - docker build .
+      -f "dockerfiles/COMPILE.dockerfile"
+      -t "compiled:${CI_COMMIT_SHORT_SHA}"
+      --build-arg BASE_IMAGE="${ELIXIR_IMAGE_NAME}:${ELIXIR_VERSION}"
+    
+    - docker build
+      -t "$BACKEND_IMAGE_NAME:${CI_COMMIT_SHORT_SHA}"
+      --build-arg RELEASE_NAME=app
+      --build-arg CI_COMMIT_SHORT_SHA
+      - < "dockerfiles/RELEASE.dockerfile"
+
+    - docker push "$BACKEND_IMAGE_NAME:${CI_COMMIT_SHORT_SHA}"
+  dependencies: []
+  tags:
+    - privileged
+
+build_manual:
+  stage: build
+  image: docker:19.03.8
+  except:
+    - master
+  when: manual
+  before_script:
+    - docker version
+    - docker login -u admin -p $APPUNITE_CI_BUILD_TOKEN $REGISTRY_NAME
+  script:
+    - echo -n "$ELIXIR_VERSION-$CI_COMMIT_SHORT_SHA" > VERSION
+
+    - docker build .
+      -f "dockerfiles/COMPILE.dockerfile"
+      -t "compiled:${CI_COMMIT_SHORT_SHA}"
+      --build-arg BASE_IMAGE="${ELIXIR_IMAGE_NAME}:${ELIXIR_VERSION}"
+    
+    - docker build
+      -t "$BACKEND_IMAGE_NAME:${CI_COMMIT_SHORT_SHA}"
+      --build-arg RELEASE_NAME=app
+      --build-arg CI_COMMIT_SHORT_SHA
+      - < "dockerfiles/RELEASE.dockerfile"
+
+    - docker push "$BACKEND_IMAGE_NAME:${CI_COMMIT_SHORT_SHA}"
+  dependencies: []
+  tags:
+    - privileged
+
+deploy:development:
+  stage: deploy
+  image: lwolf/kubectl_deployer:latest
+  only:
+    - master
+  environment:
+    name: development
+  script:
+    - echo "$GKE_CA_CERT_STG" > gke_ca.cert
+    - kubectl config set-cluster stg-deploy --server="$GKE_SERVER_STG" --certificate-authority=gke_ca.cert
+    - kubectl config set-context stg-deploy --cluster=stg-deploy
+    - kubectl config set-credentials service-account --token="$GKE_TOKEN_STG"
+    - kubectl config set-context stg-deploy --namespace="$GKE_NAMESPACE_STG" --user=service-account
+    - kubectl config use-context stg-deploy
+    - kubectl set image deployment dronline-backend dronline-backend="$BACKEND_IMAGE_NAME:${CI_COMMIT_SHORT_SHA}" --record
+  dependencies: []
+  tags:
+    - k8s
+  when: manual
+
+#################### DEPLOY-PROD ####################
+
+deploy:production:
+  stage: deploy-prod
+  image: lwolf/kubectl_deployer:latest
+  only:
+    - master
+  environment:
+    name: production
+  script:
+    - echo "$GKE_CA_CERT" > gke_ca.cert
+    - kubectl config set-cluster prod-deploy --server="$GKE_SERVER" --certificate-authority=gke_ca.cert
+    - kubectl config set-context prod-deploy --cluster=prod-deploy
+    - kubectl config set-credentials service-account --token="$GKE_TOKEN"
+    - kubectl config set-context prod-deploy --namespace="$GKE_NAMESPACE" --user=service-account
+    - kubectl config use-context prod-deploy
+    - kubectl set image deployment dronline-backend dronline-backend="$BACKEND_IMAGE_NAME:${CI_COMMIT_SHORT_SHA}" --record
+  dependencies: []
+  tags:
+    - k8s
+  when: manual

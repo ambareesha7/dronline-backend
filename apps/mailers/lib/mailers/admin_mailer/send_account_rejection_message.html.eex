@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<%= head_html(css) %>
+
+<body>
+    <%= header_html(sign_in: false) %>
+
+    <div class="content center">
+        <div class="banner">
+            <img class="banner-image" src="https://storage.googleapis.com/dronline-prod/images/mailer_content/banner_forgot_password.png" />
+        </div>
+        <h1 class="title">
+            Your application has been rejected
+        </h1>
+        <section>
+          <p>
+              We are sorry, but we must reject your application due to invalid medical credentials.
+          </p>
+        </section>
+    </div>
+
+    <%= footer_html() %>
+</body>
+</html>

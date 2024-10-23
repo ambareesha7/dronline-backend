@@ -1,0 +1,9 @@
+Patient has been invited
+
+Patient's Info
+Phone Number: <%= invitation["phone_number"] %>
+Email Address: <%= invitation["email"] %>
+
+We will notify you when the patient accepts the invitation. He will appear on your patients list.
+
+<%= footer_text() %>

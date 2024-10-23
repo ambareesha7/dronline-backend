@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<%= head_html(css) %>
+
+<body>
+    <%= header_html(sign_in: false) %>
+
+    <div class="content center">
+        <div class="banner">
+            <img class="banner-image" src="https://storage.googleapis.com/dronline-prod/images/mailer_content/banner_patient_invitation.png" />
+        </div>
+        <h1 class="title">
+           Hello!
+        </h1>
+        <section>
+            <table class="card">
+                <tbody>
+                <tr>
+                    <td class="card-description">
+                        <p>The new Patient just sent a U.S. Board Second Opinion request - please analyze the attached documents and provide a written reply via the DrOnline Specialist web platform. View request: <%= link %>. </p>
+
+                        <p>The patient is expecting your reply within 3-5 business days.</p>
+
+                        <p>Best Regards,</p>
+                        <p>DrOnline Team</p>
+
+                        <p>PS: Our team works tirelessly to improve healthcare accessibility and quality worldwide. Specialists are probably the most important part of that mission, so if you have any feedback, please, let us know!</p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <%= footer_html() %>
+</body>
+</html>

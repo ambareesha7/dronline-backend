@@ -1,0 +1,3 @@
+Dr. <%= specialist_data["last_name"] %> invites you to singup in DrOnline for easier visit scheduling <%= dynamic_link %>
+
+<%= footer_text() %>

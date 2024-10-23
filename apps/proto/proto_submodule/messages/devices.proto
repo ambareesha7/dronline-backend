@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package devices;
+
+import "elixir.proto";
+
+option (elixir_module_prefix) = "Proto.Devices";
+
+// PUT /api/devices
+// PUT /panel_api/devices
+message RegisterDeviceRequest {
+  string firebase_token = 1;
+}
+message RegisterDeviceResponse {}
+
+// PUT /api/devices/unregister
+// PUT /panel_api/devices/unregister
+message UnregisterDeviceRequest {
+  string firebase_token = 1;
+}
+message UnregisterDeviceResponse {}
+
+// PUT /api/ios_devices
+// PUT /panel_api/ios_devices
+message RegisterIOSDeviceRequest {
+  string device_token = 1;
+}
+message RegisterIOSDeviceResponse {}
+
+// PUT /api/ios_devices/unregister
+// PUT /panel_api/ios_devices/unregister
+message UnregisterIOSDeviceRequest {
+  string device_token = 1;
+}
+message UnregisterIOSDeviceResponse {}

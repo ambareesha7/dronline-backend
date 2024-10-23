@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package panel_authentication;
+
+import "elixir.proto";
+
+option (elixir_module_prefix) = "Proto.PanelAuthentication";
+
+// POST /panel_api/login
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+message LoginResponse {
+  enum Type {
+    UNKNOWN = 0;
+    GP = 1;
+    NURSE = 2;
+    EXTERNAL = 4; // external specialist; not DrOnline employee
+  }
+
+  enum ApprovalStatus {
+    UNKNOWN_STATUS = 0;
+    WAITING = 1;
+    VERIFIED = 2;
+    REJECTED = 3;
+  }
+
+  string auth_token = 1;
+  Type type = 2;
+  // Fields concern only external specialist
+  string active_package_type = 3; // DEPRECATED - use /panel_api/profile/status
+}
+
+// POST /panel_api/send_password_recovery
+//
+// It always returns 200 ok, because we don't want to reveal if email
+// is already registered in database.
+message SendPasswordRecoveryRequest {
+  string email = 1;
+}
+message SendPasswordRecoveryResponse {
+}
+
+// POST /panel_api/recover_password
+message RecoverPasswordRequest {
+  string password_recovery_token = 1;
+  string new_password = 2;
+}
+message RecoverPasswordResponse {
+}
+
+// POST /panel_api/signup
+message SignupRequest {
+  // string medical_id = 1; DEPRECATED
+  string email = 2;
+  string password = 3;
+}
+message SignupResponse {
+}
+
+// POST /panel_api/verify
+message VerifyRequest {
+  string verification_token = 1;
+}
+message VerifyResponse {
+  string auth_token = 1;
+}
+
+// POST /panel_api/change_password
+message ChangePasswordRequest {
+  string password = 1;
+}
+message ChangePasswordResponse {
+}
+
+// POST /panel_api/change_password/confirm
+message ConfirmPasswordChangeRequest {
+  string confirmation_token = 1;
+}
+message ConfirmPasswordChangeResponse {
+}
+
+// POST /panel_api/delete_account
+message SendSpecialistAccountDeletionRequest {}

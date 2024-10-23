@@ -1,0 +1,81 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Main
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify and test  
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        otp: ['26.1.1']
+        elixir: ['1.15.6']
+    services:
+      db:
+        image: postgis/postgis:15-3.3
+        ports: ['5432:5432']
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v3
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{matrix.otp}}
+          elixir-version: ${{matrix.elixir}}
+      - name: Cache deps
+        id: cache-deps
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-elixir-deps
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-${{ env.cache-name }}-
+      - name: Cache compiled build
+        id: cache-build
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-compiled-build
+        with:
+          path: _build
+          key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-${{ env.cache-name }}-
+            ${{ runner.os }}-mix-
+      - name: Install dependencies
+        run: mix deps.get
+      - name: Check Sobelow
+        id: sobelow
+        run: ./scripts/run_sobelow.sh
+      - name: Setup database
+        run: |
+          MIX_ENV=test mix ecto.create -r Postgres.Repo
+          MIX_ENV=test mix ecto.migrate
+      - name: Run tests
+        id: tests
+        run: ./scripts/test_with_warnings_check.sh
+  build_and_deploy_to_staging:
+    name: Build and deploy to GCP staging
+    needs: [verify]
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/master')
+    uses: ./.github/workflows/build_and_deploy_to_staging.yml
+    secrets: inherit

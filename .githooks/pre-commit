@@ -1,0 +1,7 @@
+#!/bin/bash
+
+echo "Pre-commit: formatting changed files"
+mix format --check-formatted
+
+echo "Pre-commit: credo"
+mix credo --strict

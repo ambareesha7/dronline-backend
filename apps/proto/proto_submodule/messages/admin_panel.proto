@@ -1,0 +1,218 @@
+syntax = "proto3";
+
+package admin_panel;
+
+import "elixir.proto";
+import "generics.proto";
+import "medical_categories.proto";
+import "patient_profile.proto";
+import "specialist_profile.proto";
+
+option (elixir_module_prefix) = "Proto.AdminPanel";
+
+// GET /admin_api/external_specialists?next_token=<next_token>&sort_by=<field_name>&order=<order>&filter=<filter>&categories_ids=<id1,id2,id3,...>
+//
+// Returns max 20 entries. Count may vary if some entries will be rejected on
+// backend side.
+//
+// Params:
+// * next_token (optional) - used to fetch next page; when missing
+// first page will be returned
+// * sort_by (optional) - used to sort by provided field - accepted values:
+//  'email', 'first_name', 'last_name', 'status', 'joined_at'
+// * order (optional) - used if sort_by is provided - accepted values:
+//  'asc', 'desc'
+// * filter (optional) - used to filter results with provided value,
+//                       currently supported: first_name, last_name, email
+//                       example: "?filter=Ahmed%20Omar"
+// * categories_ids (optional) - used to show only freelancers with given categories
+message GetExternalSpecialistsResponse {
+  repeated ExternalSpecialist external_specialists = 1;
+  string next_token = 2; // "" when there's no more data to be fetched
+}
+
+// GET
+// /admin_api/internal_specialists?next_token=<next_token>&sort_by=<field_name>&order=<order>&filter=<filter>&type=<type>
+//
+// Returns max 20 entries. Count may vary if some entries will be rejected on
+// backend side.
+//
+// Params:
+// * next_token (optional) - used to fetch next page; when set to 0 or missing
+//  first page will be returned
+// * sort_by (optional) - used to sort by provided field - accepted values:
+//  'email', 'first_name', 'last_name', 'status', 'type'
+// * order (optional) - used if sort_by is provided - accepted values:
+//  'asc', 'desc'
+// * filter (optional) - used to filter results with provided value,
+//                       currently supported: first_name, last_name, email
+//                       example: "?filter=Ahmed%20Omar"
+// * type (optional) - used to show only staff with given type
+message GetInternalSpecialistsResponse {
+  repeated InternalSpecialist internal_specialists = 1;
+  string next_token = 2; // 0 when there's no more data to be fetched
+}
+
+// POST /admin_api/internal_specialists
+message CreateInternalSpecialistRequest {
+  InternalSpecialistAccount internal_specialist_account = 1;
+}
+
+message CreateInternalSpecialistResponse {
+  InternalSpecialistAccount internal_specialist_account = 1;
+}
+
+// GET /admin_api/internal_specialists/<specialist_id>
+message GetInternalSpecialistResponse {
+  enum Type {
+    UNKNOWN_TYPE = 0;
+    GP = 1;
+    NURSE = 2;
+  }
+
+  Type type = 1;
+  generics.DateTime created_at = 2;
+  generics.DateTime completed_at = 3;
+}
+
+// GET /admin_api/external_specialists/<specialist_id>
+message GetExternalSpecialistResponse {
+  enum ApprovalStatus {
+    UNKNOWN_STATUS = 0;
+    WAITING = 1;
+    VERIFIED = 2;
+    REJECTED = 3;
+  }
+
+  generics.DateTime joined_at = 1;
+  generics.DateTime approval_status_updated_at = 2;
+  ApprovalStatus approval_status = 3;
+}
+
+// POST /admin_api/external_specialists/<specialist_id>/verify
+message VerifyExternalSpecialistRequest {
+  enum Status {
+    UNKNOWN = 0;
+    VERIFIED = 1;
+    REJECTED = 2;
+  }
+
+  Status status = 1;
+}
+
+message VerifyExternalSpecialistResponse {}
+
+// POST /admin_api/internal_specialists/<specialist_id>/send_password_recovery
+message SendPasswordRecoveryRequest {}
+
+message SendPasswordRecoveryResponse {}
+
+message InternalSpecialist {
+  enum Type {
+    UNKNOWN_TYPE = 0;
+    GP = 1;
+    NURSE = 2;
+  }
+
+  enum Status {
+    UNKNOWN_STATUS = 0;
+    CREATED = 1;
+    COMPLETED = 2;
+  }
+
+  uint64 id = 1;
+  // string medical_id = 2; DEPRECATED
+  generics.Title title = 3;
+  string first_name = 4;
+  string last_name = 5;
+  Type type = 6;
+  // repeated medical_categories.MedicalCategoryBase medical_categories = 7; DEPRECATED
+  string email = 8;
+  Status status = 9;
+  generics.DateTime created_at = 10;
+  generics.DateTime completed_at = 11;
+}
+
+message ExternalSpecialist {
+  enum ApprovalStatus {
+    UNKNOWN_STATUS = 0;
+    WAITING = 1;
+    VERIFIED = 2;
+    REJECTED = 3;
+  }
+
+  uint64 id = 1;
+  // string medical_id = 2; DEPRECATED
+  // Title title = 3; DEPRECATED
+  string first_name = 4;
+  string last_name = 5;
+  string image_url = 6;
+  repeated medical_categories.MedicalCategoryBase medical_categories = 7;
+  ApprovalStatus approval_status = 8;
+  generics.DateTime joined_at = 9;
+  generics.DateTime approval_status_updated_at = 10;
+  string email = 11;
+}
+
+message InternalSpecialistAccount {
+  enum Type {
+    UNKNOWN_TYPE = 0;
+    GP = 1;
+    NURSE = 2;
+    EXTERNAL = 3;
+  }
+
+  // string medical_id = 1; DEPRECATED
+  string email = 2;
+  // string password = 3; DEPRECATED
+  Type type = 4;
+}
+
+// GET /admin_api/us_board/fetch_us_board_specialists
+message FetchUSBoardSpecialistsResponse {
+  repeated USBoardSpecialist specialists = 1;
+}
+
+message USBoardSpecialist {
+  uint64 specialist_id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string image_url = 4;
+  string phone_number = 5;
+  generics.MedicalTitle medical_title = 6;
+
+}
+
+// POST /admin_api/us_board/assign_specialist
+message USBoardAssignSpecialistRequest {
+  uint64 specialist_id = 1;
+  string request_id = 2;
+}
+
+message AccountDeletion {
+  enum Status {
+    UNKNOWN_ACCOUNT_DELETION_STATUS = 0;
+    PENDING = 1;
+    DELETED = 2;
+  }
+
+  enum Type {
+    UNKNOWN_ACCOUNT_DELETION_TYPE = 0;
+    PATIENT = 1;
+    SPECIALIST = 2;
+  }
+
+  string id = 1;
+  Status status = 2;
+  Type type = 3;
+  generics.DateTime created_at = 4;
+  oneof basic_info {
+    patient_profile.BasicInfo patient_basic_info = 5;
+    specialist_profile.BasicInfo specialist_basic_info = 6;
+  }
+}
+
+// GET /admin_api/account_deletions
+message GetAccountDeletionsResponse {
+  repeated AccountDeletion account_deletions = 1;
+}

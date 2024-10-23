@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<%= head_html(css) %>
+
+<body class="pdf-container">
+  <%= header_html(sign_in: false) %>
+
+  <div class="pdf-content">
+    <h1 class="title">Urgent Care Recipe Details</h1>
+    <section>
+      <table>
+        <tr>
+          <td class="pdf-content_item--title">Amount:</td>
+          <td><%= pdf_data.amount %> <%= pdf_data.currency %></td>
+        </tr>
+        <tr>
+          <td class="pdf-content_item--title">Visit date:</td>
+          <td><%= pdf_data.visit_date %></td>
+        </tr>
+        <tr>
+          <td class="pdf-content_item--title">Specialist:</td>
+          <td><%= pdf_data.specialist_name %></td>
+        </tr>
+        <tr>
+          <td class="pdf-content_item--title">Payment date:</td>
+          <td><%= pdf_data.payment_date %></td>
+        </tr>
+      </table>
+    </section>
+  </div>
+  <%= footer_html() %>
+</body>
+</html>

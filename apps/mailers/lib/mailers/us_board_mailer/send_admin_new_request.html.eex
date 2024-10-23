@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<%= head_html(css) %>
+
+<body>
+    <%= header_html(sign_in: false) %>
+
+    <div class="content center">
+        <div class="banner">
+            <img class="banner-image" src="https://storage.googleapis.com/dronline-prod/images/mailer_content/banner_patient_invitation.png" />
+        </div>
+        <h1 class="title">
+           New US Board Request
+        </h1>
+        <section>
+            <table class="card">
+                <tbody>
+                <tr>
+                    <td class="card-description">
+                        <p>A new patient has just sent a U.S. Board Second Opinion request. Please, assign a suitable Specialist to the case via the DrOnline Web Admin Panel.</p>
+
+                        <p>Best Regards,</p>
+                        <p>DrOnline Team</p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <%= footer_html() %>
+</body>
+</html>

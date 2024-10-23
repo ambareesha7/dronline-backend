@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+// DEPRECATED
+package vitals;
+
+import "elixir.proto";
+import "patient_profile.proto";
+
+option (elixir_module_prefix) = "Proto.Vitals";
+
+message VitalsEntry {
+  uint64 id = 1;
+  patient_profile.BMI bmi = 2;
+  patient_profile.BloodPressure blood_pressure = 3;
+  EKG ekg = 4;
+}
+
+message EKG {
+  string file_url = 1;
+}

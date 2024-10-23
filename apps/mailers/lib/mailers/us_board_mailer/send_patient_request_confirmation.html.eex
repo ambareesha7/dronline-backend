@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<%= head_html(css) %>
+
+<body>
+    <%= header_html(sign_in: false) %>
+
+    <div class="content center">
+        <div class="banner">
+            <img class="banner-image" src="https://storage.googleapis.com/dronline-prod/images/mailer_content/banner_patient_invitation.png" />
+        </div>
+        <h1 class="title">
+          Hello!
+        </h1>
+        <section>
+            <table class="card">
+                <tbody>
+                <tr>
+                    <td class="card-description">
+                        <p>Our team has received your request, and we are currently identifying the most suitable Specialist for your case. We will notify you as soon as a Specialist accepts your request.</p>
+
+                        <p>Once the payment is made, the confirmation notice will be sent to you via email within 24 hours of receipt of payment.</p>
+
+                        <p>You can also track the progress in the DrOnline App</p>
+                        <%= # dynamic_link %>
+
+                        <p>PS: Our team works tirelessly to improve healthcare accessibility and quality worldwide. If you have any feedback, please, let us know!</p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <%= footer_html() %>
+</body>
+</html>

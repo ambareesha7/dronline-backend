@@ -1,0 +1,23 @@
+<h1>Manage your team</h1>
+
+<h2>Your team members</h2>
+
+<ul>
+  <%= for member <- @team_members do %>
+    <li>
+      <%= "#{member.first_name} #{member.last_name}" %>
+      (<%= link "Delete", to: Routes.team_path(@conn, :remove_member, member.specialist_id), method: :delete %>)
+    </li>
+  <% end %>
+</ul>
+
+<h2>Add team member</h2>
+
+<%= form_for @conn, Routes.team_path(@conn, :add_member), [as: :team_invitation], fn f -> %>
+  <%= text_input f, :email, placeholder: "Email address" %>
+  <%= submit "Add" %>
+<% end %>
+
+<hr />
+
+<%= link "Sign out", to: Routes.session_path(@conn, :delete), method: :delete %>

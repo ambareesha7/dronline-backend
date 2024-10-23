@@ -1,0 +1,11 @@
+<header class="center">
+    <a href="<%= Application.get_env(:web, :specialist_panel_url) %>" class="logo-container">
+        <img src="https://web.dronline.me/static/images/logo.png" class="logo-image" />
+    </a>
+
+    <%= if @sign_in do %>
+    <a href="<%= Application.get_env(:web, :specialist_panel_url) %>/sign_in" class="sign-in">
+        Sign In
+    </a>
+    <% end %>
+</header>

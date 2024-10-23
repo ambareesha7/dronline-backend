@@ -1,0 +1,8 @@
+Security alert
+
+Someone has tried to sign up to DrOnline using the following email address:
+<%= email %>
+
+We've sent this email to inform you about this attempt.
+
+<%= footer_text() %>

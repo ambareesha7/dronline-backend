@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package doctors;
+// FeaturedDoctor, FavouriteProvider and DoctorDetails have identical structure but
+// it's not guaranteed to stay like this in future thus they should stay as separate
+// messages
+
+import "elixir.proto";
+import "generics.proto";
+
+option (elixir_module_prefix) = "Proto.Doctors";
+
+// GET /api/featured_doctors
+message GetFeaturedDoctorsResponse {
+  repeated FeaturedDoctor deprecated = 1; // DEPRECATED
+  repeated generics.Specialist featured_doctors = 2;
+}
+
+message FeaturedDoctor {
+  uint64 id = 1;
+  string avatar_url = 2;
+  string first_name = 3;
+  string last_name = 4;
+  repeated string categories = 5;
+  PackageType package_type = 6;
+}
+
+// GET /api/favourite_providers
+message GetFavouriteProvidersResponse {
+  repeated FavouriteProvider deprecated = 1; // DEPRECATED
+  repeated generics.Specialist favourite_providers = 2;
+
+}
+
+message FavouriteProvider {
+  uint64 id = 1;
+  string avatar_url = 2;
+  string first_name = 3;
+  string last_name = 4;
+  repeated string categories = 5;
+  PackageType package_type = 6;
+}
+
+// GET /api/doctors_details?ids=<id1,id2,id3,...>
+message GetDoctorsDetailsResponse {
+  repeated DoctorDetails deprecated = 1; // DEPRECATED
+  repeated generics.Specialist doctors_details = 2;
+}
+
+message DoctorDetails {
+  uint64 id = 1;
+  string avatar_url = 2;
+  string first_name = 3;
+  string last_name = 4;
+  repeated string categories = 5;
+  PackageType package_type = 6;
+}
+
+enum PackageType {
+  UNKOWN = 0;
+  BASIC = 1;
+  SILVER = 2;
+  GOLD = 3;
+  PLATINUM = 4;
+}

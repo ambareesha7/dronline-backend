@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package timeline;
+
+import "elixir.proto";
+import "dispatches.proto";
+import "emr.proto";
+import "generics.proto";
+import "vitals.proto";
+
+option (elixir_module_prefix) = "Proto.Timeline";
+
+// GET /panel_api/timelines/:id
+message GetTimelineResponse {
+  Timeline timeline = 1;
+  repeated Specialist deprecated = 2; // DEPRECATED
+  repeated generics.Specialist specialists = 3;
+}
+
+// CHANNEL PAYLOAD
+message NewTimelineItem {
+  uint64 record_id = 1;
+  TimelineItem timeline_item = 2;
+  Specialist specialist = 3; // DEPRECATED
+  repeated generics.Specialist specialists = 4;
+}
+
+message Timeline {
+  repeated TimelineItem timeline_items = 1;
+}
+
+message TimelineItem {
+  string id = 8;
+  uint64 timestamp = 1;
+  uint32 comments_counter = 9;
+
+  oneof item {
+    Call call = 2;
+    DispatchRequest dispatch_request = 3;
+    Vitals vitals = 4;
+    DoctorInvitation doctor_invitation = 5;
+    ProvidedHPI provided_hpi = 6;
+    CallRecording call_recording = 7;
+    emr.Vitals vitals_v2 = 10;
+    OrderedTests ordered_tests = 11;
+    Medications medications = 12;
+  }
+
+  message Call {
+    uint64 specialist_id = 1;
+    uint64 category_id = 2; // greater than 0 for calls with doctor; 0 otherwise
+  }
+
+  message DispatchRequest {
+    uint64 requester_id = 1; // id of specialist who requested a dispatch
+    dispatches.PatientLocation patient_location = 2;
+  }
+
+  message Vitals {
+    uint64 nurse_id = 1;
+    vitals.VitalsEntry vitals_entry = 2;
+  }
+
+  message OrderedTests {
+    uint64 specialist_id = 1;
+    repeated emr.OrderedTestsItem items = 2;
+  }
+
+  message Medications {
+    uint64 specialist_id = 1;
+    repeated emr.MedicationsItem items = 2;
+  }
+
+  message DoctorInvitation {
+    uint64 specialist_id = 1;
+    uint64 medical_category_id = 2;
+  }
+
+  message ProvidedHPI {
+    emr.HPI hpi = 1;
+    uint64 specialist_id = 2; // id of specialist who modified hpi as the last one
+  }
+
+  message CallRecording {
+    string video_url = 1;
+    string thumbnail_url = 2;
+    string session_id = 3;
+  }
+}
+
+// DEPRECATED
+message Specialist {
+  uint64 id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string avatar_url = 4;
+  Type type = 5;
+  repeated string medical_categories = 6;
+
+  enum Type {
+    UNKNOWN = 0;
+    GP = 1;
+    NURSE = 2;
+    EXTERNAL = 4; // external specialist; not DrOnline employee
+  }
+}

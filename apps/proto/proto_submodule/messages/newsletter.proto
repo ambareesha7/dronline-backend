@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package newsletter;
+
+import "elixir.proto";
+
+option (elixir_module_prefix) = "Proto.Newsletter";
+
+// POST /api/newsletter
+message SubscribeRequest {
+  string email = 1;
+  string phone_number = 2;
+}
+
+message SubscribeResponse {
+}

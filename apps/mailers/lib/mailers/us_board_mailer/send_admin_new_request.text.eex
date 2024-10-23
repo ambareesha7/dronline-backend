@@ -1,0 +1,8 @@
+Hello!
+
+A new patient has just sent a U.S. Board Second Opinion request. Please, assign a suitable Specialist to the case via the DrOnline Web Admin Panel.
+
+Best Regards,
+DrOnline Team
+
+<%= footer_text() %>

@@ -1,0 +1,260 @@
+syntax = "proto3";
+
+package patient_profile;
+
+import "elixir.proto";
+import "forms.proto";
+import "generics.proto";
+import "insurance.proto";
+
+option (elixir_module_prefix) = "Proto.PatientProfile";
+
+// GET /api/patient/credentials
+message GetCredentialsResponse {
+  Credentials credentials = 1;
+}
+
+// GET /api/patient/basic_info
+// GET /panel_api/patients/<patient_id>/basic_info
+message GetBasicInfoResponse {
+  BasicInfo basic_info = 1;
+}
+
+// PUT /api/patient/basic_info
+// PUT /panel_api/patients/<patient_id>/basic_info
+message UpdateBasicInfoRequest {
+  BasicInfoParams basic_info_params = 1;
+}
+message UpdateBasicInfoResponse {
+  BasicInfo basic_info = 1;
+}
+
+// DEPRECATED
+// GET /api/patient/bmi
+// GET /panel_api/patients/<patient_id>/bmi
+message GetBMIResponse {
+  BMI bmi = 1;
+}
+
+// DEPRECATED
+// PUT /api/patient/bmi
+// PUT /panel_api/patients/<patient_id>/bmi
+message UpdateBMIRequest {
+  BMI bmi = 1;
+}
+message UpdateBMIResponse {
+  BMI bmi = 1;
+}
+
+// GET /api/patient/history
+// GET /panel_api/patients/<patient_id>/history
+message GetHistoryResponse {
+  forms.Form social = 1;
+  forms.Form medical = 2;
+  forms.Form surgical = 3;
+  forms.Form family = 4;
+  forms.Form allergy = 5;
+  forms.Form immunization = 6;
+}
+
+// PUT /api/patient/history
+// PUT /panel_api/patients/<patient_id>/history
+message UpdateHistoryRequest {
+  // single request updates single form
+  oneof updated {
+    forms.Form social = 1;
+    forms.Form medical = 2;
+    forms.Form surgical = 3;
+    forms.Form family = 4;
+    forms.Form allergy = 5;
+    forms.Form immunization = 6;
+  }
+}
+message UpdateHistoryResponse {
+  forms.Form social = 1;
+  forms.Form medical = 2;
+  forms.Form surgical = 3;
+  forms.Form family = 4;
+  forms.Form allergy = 5;
+  forms.Form immunization = 6;
+}
+
+// PUT /panel_api/patients/<patient_id>/history/all
+message UpdateAllHistoryRequest {
+  forms.Form social = 1;
+  forms.Form medical = 2;
+  forms.Form surgical = 3;
+  forms.Form family = 4;
+  forms.Form allergy = 5;
+  forms.Form immunization = 6;
+}
+message UpdateAllHistoryResponse {
+  forms.Form social = 1;
+  forms.Form medical = 2;
+  forms.Form surgical = 3;
+  forms.Form family = 4;
+  forms.Form allergy = 5;
+  forms.Form immunization = 6;
+}
+
+// GET /api/patient/address
+// GET /panel_api/patients/<patient_id>/address
+message GetAddressResponse {
+  Address address = 1;
+}
+
+// PUT /api/patient/address
+// PUT /panel_api/patients/<patient_id>/address
+message UpdateAddressRequest {
+  Address address = 1;
+}
+message UpdateAddressResponse {
+  Address address = 1;
+}
+
+// GET /api/patient/review_of_system
+// GET /panel_api/patients/<patient_id>/review_of_system
+message GetReviewOfSystemResponse {
+  ReviewOfSystem review_of_system = 1;
+}
+
+// GET /api/patient/insurance
+// GET /panel_api/patients/<patient_id>/insurance
+message GetInsuranceResponse {
+  Insurance insurance = 1;
+}
+
+// GET /api/patient/review_of_system/history?next_token=<next_token>
+// GET /panel_api/patients/<patient_id>/review_of_system/history?next_token=<next_token>
+message GetReviewOfSystemHistoryResponse {
+  repeated ReviewOfSystem review_of_system_history = 1;
+  string next_token = 2;
+  repeated generics.Specialist specialists = 3;
+  generics.Patient patient = 4;
+}
+
+// PUT /api/patient/review_of_system
+// PUT /panel_api/patients/<patient_id>/review_of_system
+message UpdateReviewOfSystemRequest {
+  forms.Form review_of_system = 1;
+}
+message UpdateReviewOfSystemResponse {
+  ReviewOfSystem review_of_system = 1;
+}
+
+// PUT /api/patient/insurance
+// PUT /panel_api/patients/<patient_id>/insurance
+message UpdateInsuranceRequest {
+  string member_id = 1;
+  uint64 provider_id = 2;
+}
+message UpdateInsuranceResponse {
+  Insurance insurance = 1;
+}
+
+// DELETE /api/patient/insurance
+message DeleteInsuranceResponse {
+  Insurance insurance = 1;
+}
+
+// GET /api/patient/status
+message GetStatusResponse{
+  bool onboarding_completed = 1; // when set to false patient should be asked about his personal data
+}
+
+// GET /api/patient/children
+message GetChildrenProfilesResponse {
+  repeated ChildProfile child_profiles = 1;
+}
+
+// POST /api/patient/children
+message AddChildProfileRequest {
+  BasicInfoParams basic_info_params = 1;
+}
+message AddChildProfileResponse {
+  ChildProfile child_profile = 1;
+}
+
+// GET /panel_api/patients/<patient_id>/relationship
+//
+// Returns related adult patient profile when the selected patient is registered as a child
+// of another patient, otherwise returns a list of children profiles related to the selected patient
+// (list may be empty if there are none)
+message GetRelationshipResponse {
+  oneof related_profiles {
+    generics.Patient adult = 1;
+    ChildrenList children = 2;
+  }
+}
+
+message ChildrenList {
+  repeated generics.Patient children = 1;
+}
+
+message ChildProfile {
+  BasicInfo basic_info = 1;
+  string auth_token = 2;
+  uint64 patient_id = 3;
+}
+
+message BasicInfo {
+  generics.Title title = 1; // deprecated
+  string first_name = 2;
+  string last_name = 3;
+  generics.DateTime birth_date = 4;
+  string email = 5;
+  uint64 join_date = 6;
+  string avatar_url = 7;
+  generics.Gender gender = 8;
+  bool is_insured = 9;
+}
+
+message BasicInfoParams {
+  generics.Title title = 1; // deprecated
+  string first_name = 2;
+  string last_name = 3;
+  generics.DateTime birth_date = 4;
+  string email = 5;
+  uint64 deprecated1 = 6; // kept for backward compatibility with BasicInfo message
+  string deprecated2 = 7; // kept for backward compatibility with BasicInfo message
+  string avatar_resource_path = 8; // empty values don't override avatar
+  generics.Gender gender = 9;
+}
+
+// DEPRECATED
+message BMI {
+  generics.Height height = 1;
+  generics.Weight weight = 2;
+}
+
+// DEPRECATED
+message BloodPressure {
+  uint32 systolic = 1;
+  uint32 diastolic = 2;
+  uint32 pulse = 3;
+}
+
+message Address {
+  string street = 1;
+  string home_number = 2;
+  string zip_code = 3;
+  string city = 4;
+  string country = 5;
+  string additional_numbers = 6;
+  string neighborhood = 7;
+}
+
+message ReviewOfSystem {
+  forms.Form form = 1;
+  uint64 inserted_at = 2;
+  uint64 provided_by_specialist_id = 3; // optional; 0 means that RoS was provided by patient
+}
+
+message Insurance {
+  string member_id = 1;
+  insurance.Provider provider = 2;
+}
+
+message Credentials {
+  uint64 id = 1;
+}

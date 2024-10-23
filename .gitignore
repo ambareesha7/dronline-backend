@@ -1,0 +1,10 @@
+/_build
+/cover
+/deps
+erl_crash.dump
+*.ez
+.sobelow
+temporary
+.iex.exs
+.vscode
+.elixir_ls

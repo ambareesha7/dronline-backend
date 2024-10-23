@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<%= head_html(css) %>
+
+<body>
+    <%= header_html(sign_in: false) %>
+
+    <div class="content center">
+        <div class="banner">
+            <img class="banner-image" src="https://storage.googleapis.com/dronline-prod/images/mailer_content/banner_forgot_password.png" />
+        </div>
+
+        <h1 class="title">
+            Security alert
+        </h1>
+
+        <section>
+            <p>
+                Someone has tried to sign up to DrOnline using the following email address:
+            </p>
+            <p>
+                <%= email %>
+            </p>
+
+            <p class="indented">
+                We've sent this email to inform you about this attempt.
+            </p>
+        </section>
+    </div>
+
+    <%= footer_html() %>
+</body>
+</html>

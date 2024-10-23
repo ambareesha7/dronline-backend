@@ -1,0 +1,8 @@
+The Patient scheduled a call with Specialist.
+
+<%= # View visit details link %>
+
+Best Regards,
+DrOnline Team
+
+<%= footer_text() %>

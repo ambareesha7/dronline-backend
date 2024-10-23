@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<%= head_html(css) %>
+
+<body>
+    <%= header_html(sign_in: false) %>
+
+    <div class="content center">
+        <div class="banner">
+            <img class="banner-image" src="https://storage.googleapis.com/dronline-prod/images/mailer_content/banner_patient_invitation.png" />
+        </div>
+        <h1 class="title">
+           Specialist submitted your request for 2nd opinion
+        </h1>
+        <section>
+            <table class="card">
+                <tbody>
+                <tr>
+                    <td class="card-description">
+                       <p>Specialist <%= specialist_name %> has submitted an opinion.</p>
+
+                        You can also track the progress in the DrOnline App.</p>
+                        <%= # dynamic_link %>
+
+                        <p>Best Regards,</p>
+                        <p>DrOnline Team</p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <%= footer_html() %>
+</body>
+</html>

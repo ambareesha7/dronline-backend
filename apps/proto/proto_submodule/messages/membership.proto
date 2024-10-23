@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package membership;
+
+import "elixir.proto";
+import "generics.proto";
+
+option (elixir_module_prefix) = "Proto.Membership";
+
+// GET /panel_api/membership/packages
+message GetPackagesListResponse {
+  repeated Package packages = 1;
+}
+
+message Package {
+  string name = 1;
+  string price = 2;
+  repeated Feature features = 3;
+  string type = 4;
+  // Only for active package endpoint
+  repeated Feature missing_features = 5;
+
+  message Feature {
+    string text = 1;
+    bool bold = 2;
+    string description = 3;
+  }
+}
+
+// GET /panel_api/membership
+message GetActivePackageResponse {
+  Package active_package = 1;
+  generics.DateTime expires_at = 2;
+  Package next_package = 3;
+}
+
+// GET /panel_api/membership/pending_subscription
+message GetPendingSubscriptionResponse{
+  string redirect_url = 1;
+}
+
+// POST /panel_api/membership/subscribe
+message SubscribeRequest {
+  string type = 1;
+}
+
+message SubscribeResponse {
+  // URL for Telr WebView
+  string redirect_url = 1;
+}
+
+// This endpoint should be called after getting
+// callback from Telr WebView
+// POST /panel_api/membership/verify
+message VerifyRequest {
+  string order_id = 1;
+}
+
+message VerifyResponse {
+  enum Status {
+    UNKNOWN = 0;
+    PAID = 1; // everything went well
+    DECLINED = 2; // payment didn't successed 
+  }
+
+  Status status = 1;
+  Package package = 2;
+}
+
+// CHANNEL PAYLOAD
+message ActivePackageUpdate {
+  string type = 1;
+}

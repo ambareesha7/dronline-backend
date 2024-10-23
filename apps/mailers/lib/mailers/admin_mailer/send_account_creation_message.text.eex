@@ -1,0 +1,7 @@
+Your account in DrOnline has been created
+
+Admin has invited you to DrOnline.
+Click the following link to set a password and complete your profile
+<%= link %>
+
+<%= footer_text() %>

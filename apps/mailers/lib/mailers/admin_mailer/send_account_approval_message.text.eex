@@ -1,0 +1,9 @@
+Welcome to DrOnline
+
+Your application has been accepted!
+
+Go to DrOnline and choose your membership. You can upgrade your plan anytime and gain more features.
+
+<%= link %>
+
+<%= footer_text() %>

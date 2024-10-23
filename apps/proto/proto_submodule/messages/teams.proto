@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+// DEPRECATED
+package teams;
+
+import "elixir.proto";
+import "generics.proto";
+
+option (elixir_module_prefix) = "Proto.Teams";
+
+enum Role {
+  UNKNOWN_TYPE = 0;
+  MEMBER = 1;
+  ADMIN = 2;
+  EXTERNAL = 3;
+}
+
+// GET /panel_api/my_team
+message MyTeam {
+  uint64 team_id = 1;
+  generics.Coordinates location = 2;
+  string formatted_address = 3;
+  bool is_current_user_admin = 4;
+  bool is_current_user_owner = 5;
+  string name = 6;
+  string logo_url = 7;
+}
+
+// GET /panel_api/team_invitations
+message TeamInvitations {
+  repeated TeamInvitation invitations = 1;
+}
+
+message TeamInvitation {
+  uint64 team_id = 1;
+  generics.Specialist owner_profile = 2;
+}
+
+
+message TeamMember {
+  generics.Specialist profile = 1;
+  Role member_role = 2;
+  TeamEncountersStatsResponse encounters_stats = 3;
+}
+
+// GET /panel_api/my_team/members
+message TeamMembersResponse {
+  repeated TeamMember team_members = 1;
+}
+
+// POST /panel_api/my_team/members
+message AddMember {
+  enum Type {
+    UNKNOWN_TYPE = 0;
+    GP = 1;
+    NURSE = 2;
+    EXTERNAL = 3;
+  }
+
+  string specialist_email = 1;
+  Type account_type = 2;
+}
+
+// PUT /panel_api/my_team/members/:specialist_id/role
+message SetRole {
+  Role new_role = 1;
+}
+
+
+// PUT /panel_api/my_team/location 
+message SetTeamLocation {
+  generics.Coordinates location = 1;
+  string formatted_address = 2;
+}
+
+// PUT /panel_api/my_team/branding
+message SetBranding {
+  string name = 1;
+  string logo_url = 2;
+}
+
+
+// GET /panel_api/my_team/stats
+message TeamEncountersStatsResponse {
+  uint64 scheduled = 1;
+  uint64 pending = 2;
+  uint64 completed = 3;
+  uint64 canceled = 4;
+}
+
+// GET /panel_api/my_team/urgent_care_stats
+message TeamUrgentCareStatsResponse {
+  uint64 total = 1;
+}

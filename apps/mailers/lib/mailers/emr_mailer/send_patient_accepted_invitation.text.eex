@@ -1,0 +1,10 @@
+Patient has joined DrOnline on your invitation.
+
+Patient's Info
+<%= patient_data["first_name"] %> <%= patient_data["last_name"] %>
+Phone Number: <%= patient_data["phone_number"] %>
+Email Address: <%= patient_data["email"] %>
+
+You can always find your Patients on your Patient’s list.
+
+<%= footer_text() %>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<%= head_html(css) %>
+
+<body>
+    <%= header_html(sign_in: true) %>
+
+    <div class="content center">
+        <div class="banner">
+            <img class="banner-image" src="https://storage.googleapis.com/dronline-prod/images/mailer_content/banner_patient_invited.png" />
+        </div>
+        <h1 class="title">
+            Patient has been invited
+        </h1>
+        <section>
+            <h3 class="subtitle">
+                Patient's Info
+            </h3>
+            <p>
+                Phone Number
+                <br/>
+                <%= invitation["phone_number"] %>
+            </p>
+            <p>
+                Email Address
+                <br/>
+                <%= invitation["email"] %>
+            </p>
+            <p class="indented">
+                We will notify you when the patient accepts the invitation. He will appear on your patients list.
+            </p>
+        </section>
+    </div>
+
+    <%= footer_html() %>
+</body>
+</html>

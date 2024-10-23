@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package forms;
+
+import "elixir.proto";
+
+option (elixir_module_prefix) = "Proto.Forms";
+
+message Form {
+  repeated FormField fields = 1;
+  bool completed = 2;
+}
+
+message FormField {
+  string uuid = 1; // ignore this for now
+
+  // Every form field should have field_name.
+  // Only exception can be multiselect in subform.
+  string label = 2;
+
+  oneof value {
+    Select select = 3;
+    MultiSelect multiselect = 4;
+    StringField string = 5;
+    IntegerField integer = 6;
+    MonthField month = 7;
+    FormFieldsGroup form_fields_group = 8;
+  }
+}
+
+message FormFieldsGroup {
+  repeated FormField form_fields = 1;
+}
+
+message Select {
+  message Option {
+    string uuid = 1; // ignore this for now
+    string label = 2;
+    repeated FormField subform = 3;
+  }
+
+  repeated Option options = 1;
+  Option choice = 2;
+}
+
+message MultiSelect {
+  message Option {
+    string uuid = 1; // ignore this for now
+    string label = 2;
+    repeated FormField subform = 3;
+    repeated string sublabels = 4; // for cases when few labels have shared checkbox
+
+    // distinct option can not be selected together with other options
+    // e.g. `None` with any other option
+    bool distinct = 5;
+
+    // client app sets it to true if option was provided by patient
+    bool is_custom = 6;
+  }
+
+  repeated Option options = 1;
+  repeated Option choices = 2;
+  bool allow_custom_option = 3; // when set to true patient can add custom options
+}
+
+message StringField {
+  string value = 1;
+  bool is_set = 2; // client app sets it to true if patient completed field
+}
+
+message IntegerField {
+  int32 value = 1;
+  bool is_set = 2; // client app sets it to true if patient completed field
+}
+
+// Message used for dates in following format: 12-2010
+message MonthField {
+  int64 value = 1; // unix timestamp in seconds (first second of given month)
+  bool is_set = 2; // client app sets it to true if patient completed field
+}

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package authentication;
+
+import "elixir.proto";
+
+option (elixir_module_prefix) = "Proto.Authentication";
+
+// POST /api/login
+message LoginRequest {
+  string firebase_token = 1;
+}
+message LoginResponse {
+  string auth_token = 1;
+}
+
+// POST /api/delete_account
+message SendPatientAccountDeletionRequest {}

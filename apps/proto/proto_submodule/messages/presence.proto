@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package presence;
+
+import "elixir.proto";
+
+option (elixir_module_prefix) = "Proto.Presence";
+
+message PresenceState {
+  repeated Presence presences = 1;
+}
+
+message PresenceDiff {
+  repeated Presence joins = 1;
+  repeated Presence leaves = 2;
+}
+
+message Presence {
+  uint64 id = 1;
+  repeated Metadata metadata = 2;
+}
+
+message Metadata {
+  string phx_ref = 1;
+}

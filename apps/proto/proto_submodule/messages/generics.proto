@@ -1,0 +1,145 @@
+syntax = "proto3";
+
+package generics;
+
+import "elixir.proto";
+
+option (elixir_module_prefix) = "Proto.Generics";
+
+// Generic datetime message
+//
+// Used when there's need to distinguish between int default value 0 and
+// valid datetime "1970-01-01 00:00:00Z" which timestamp value is also 0
+message DateTime {
+  // unix timestamp in seconds
+  int64 timestamp = 1;
+}
+
+message Height {
+  enum Unit {
+    CM = 0;
+  }
+
+  int32 value = 1;
+  Unit unit = 2;
+}
+
+message Weight {
+  enum Unit {
+    KG = 0;
+  }
+
+  int32 value = 1;
+  Unit unit = 2;
+}
+
+enum MedicalTitle {
+  UNKNOWN_MEDICAL_TITLE = 0;
+  M_D = 1;
+  D_O = 2;
+  PH_D = 3;
+  D_D_S = 4;
+  N_P = 5;
+  P_A = 6;
+  R_N = 7;
+  R_D = 8;
+  R_D_N = 9;
+  D_P_M = 10;
+  M_B_B_S = 11;
+}
+
+enum Gender {
+  UNKNOWN_GENDER = 0;
+  MALE = 1;
+  FEMALE = 2;
+  OTHER = 3;
+}
+
+enum Title {
+  UNKNOWN_TITLE = 0;
+  MR = 1;
+  MRS = 2;
+  MS = 3;
+}
+
+message Specialist {
+  enum Type {
+    UNKNOWN = 0;
+    GP = 1;
+    NURSE = 2;
+    EXTERNAL = 3;
+  }
+
+  enum Package {
+    UNKOWN = 0;
+    BASIC = 1;
+    SILVER = 2;
+    GOLD = 3;
+    PLATINUM = 4;
+  }
+
+  message MedicalCategory {
+    uint64 id = 1;
+    string name = 2;
+  }
+
+  uint64 id = 1;
+  Title title = 8; // deprecated
+  string first_name = 2;
+  string last_name = 3;
+  string avatar_url = 4;
+  Type type = 5;
+  Package package = 6;
+  repeated string deprecated = 7; // deprecated in favor of field 9
+  repeated MedicalCategory medical_categories = 9;
+
+  generics.Gender gender = 10;
+  generics.MedicalTitle medical_title = 11;
+  string dha_license = 12;
+}
+
+message Patient {
+  message RelatedAdult {
+    uint64 id = 1;
+  }
+
+  uint64 id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  Title title = 4; // deprecated
+  generics.DateTime birth_date = 5;
+  string avatar_url = 6;
+  RelatedAdult related_adult = 7; // set only for child patients
+  generics.Gender gender = 8;
+
+  bool is_insured = 9;
+  string insurance_provider_name = 10;
+  string insurance_member_id = 11;
+}
+
+message Coordinates {
+  float lat = 1;
+  float lon = 2;
+}
+
+message Countries {
+  repeated Country countries = 1;
+}
+
+message Country {
+  string id = 1;
+  string name = 2;
+  string dial_code = 3;
+}
+
+message PaymentsParams {
+  enum PaymentMethod {
+    TELR = 0; // for Telr gateway
+    EXTERNAL = 1; // for payment outside DrOnline app (e.g. in-office visit)
+  }
+
+  string amount = 1; // amount in string, e.g. 10$ will be "1000"
+  string currency = 2; // currency 3 digits code, e.g. USD
+  string transaction_reference = 3; // payment gateway transaction id
+  PaymentMethod payment_method = 4;
+}

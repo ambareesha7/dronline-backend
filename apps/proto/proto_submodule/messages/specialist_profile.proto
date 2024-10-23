@@ -1,0 +1,267 @@
+syntax = "proto3";
+
+package specialist_profile;
+
+import "elixir.proto";
+import "generics.proto";
+import "medical_categories.proto";
+
+option (elixir_module_prefix) = "Proto.SpecialistProfile";
+
+// GET /panel_api/profile/credentials
+// GET /admin_api/external_specialist/<external_specialist_id>/credentials
+// GET /admin_api/internal_specialist/<internal_specialist_id>/credentials
+message GetCredentialsResponse {
+  Credentials credentials = 1;
+}
+
+// GET /panel_api/profile/basic_info
+// GET /admin_api/external_specialist/<external_specialist_id>/basic_info
+// GET /admin_api/internal_specialist/<internal_specialist_id>/basic_info
+message GetBasicInfoResponse {
+  BasicInfo basic_info = 1;
+}
+
+// PUT /panel_api/profile/basic_info
+// PUT /admin_api/internal_specialist/<internal_specialist_id>/basic_info
+message UpdateBasicInfoRequest {
+  BasicInfo basic_info = 1;
+}
+message UpdateBasicInfoResponse {
+  BasicInfo basic_info = 1;
+}
+
+// GET /admin_api/specialists/<specialist_id>/bio
+// GET /api/specialists/<specialist_id>/bio
+// GET /panel_api/profile/bio
+message GetBioResponse {
+  Bio bio = 1;
+}
+
+// PUT /admin_api/specialists/<specialist_id>/bio
+// PUT /panel_api/profile/bio
+message UpdateBioRequest {
+  Bio bio = 1;
+}
+message UpdateBioResponse {
+  Bio bio = 1;
+}
+
+// GET /panel_api/profile/location
+// GET /admin_api/external_specialist/<external_specialist_id>/location
+// GET /api/specialists/<specialist_id>/location
+message GetLocationResponse {
+  Location location = 1;
+}
+
+// GET /api/specialists/<specialist_id>/prices
+// GET /panel_api/profile/prices
+message GetPricesResponse {
+  repeated CategoryPricesResponse categories_prices = 1;
+}
+
+// PUT /panel_api/profile/prices
+message UpdatePricesRequest {
+  CategoryPricesRequest category_prices = 1;
+}
+message UpdatePricesResponse {
+  CategoryPricesResponse category_prices = 1;
+}
+
+// PUT /panel_api/profile/location
+message UpdateLocationRequest {
+  Location location = 1;
+}
+message UpdateLocationResponse {
+  Location location = 1;
+}
+
+// GET /panel_api/profile/medical_credentials
+// GET /admin_api/external_specialist/<external_specialist_id>/medical_credentials
+// GET /admin_api/internal_specialist/<internal_specialist_id>/medical_credentials
+message GetMedicalCredentialsResponse {
+  MedicalCredentials medical_credentials = 1;
+}
+
+// PUT /panel_api/profile/medical_credentials
+// PUT /admin_api/internal_specialist/<internal_specialist_id>/medical_credentials
+message UpdateMedicalCredentialsRequest {
+  MedicalCredentials medical_credentials = 1;
+}
+message UpdateMedicalCredentialsResponse {
+  MedicalCredentials medical_credentials = 1;
+}
+
+// GET /panel_api/profile/medical_categories
+// GET /admin_api/external_specialist/<external_specialist_id>/medical_categories
+// GET /admin_api/internal_specialist/<internal_specialist_id>/medical_categories
+message GetMedicalCategoriesResponse {
+  repeated medical_categories.MedicalCategoryBase medical_categories = 1;
+}
+
+// PUT /panel_api/profile/medical_categories
+// PUT /admin_api/internal_specialist/<internal_specialist_id>/medical_categories
+message UpdateMedicalCategoriesRequest {
+  repeated medical_categories.MedicalCategoryBase medical_categories = 1;
+}
+message UpdateMedicalCategoriesResponse {
+  repeated medical_categories.MedicalCategoryBase medical_categories = 1;
+}
+
+// PUT /panel_api/profile/medical_info
+message UpdateMedicalInfoRequest {
+  MedicalInfo medical_info = 1;
+}
+message UpdateMedicalInfoResponse {
+  MedicalInfo medical_info = 1;
+}
+
+// GET /panel_api/profile/status
+message GetStatusResponse {
+  Status status = 1;
+}
+
+message Credentials {
+  // string medical_id = 1; // DEPRECATED
+  string email = 2;
+  uint64 id = 3;
+}
+
+// GET /panel_api/specialists/category/<category_id>
+message GetSpecialistsInCategoryResponse {
+  repeated generics.Specialist specialists = 1;
+}
+
+// GET /panel_api/specialists?next_token=<next_token>&filter=<filter>&membership=<membership>
+// GET /panel_api/specialists/online?next_token=<next_token>&filter=<filter>&membership=<membership>
+// Params:
+// * next_token (optional) - used to fetch next page; when set to "" or missing first page will be returned
+// * filter (optional) - used to filter results with patient provided values
+//                       currently supported: first_name, last_name, title, country
+//                       example: "?filter=Ahmed%20Poland"
+// * membership (optional) - used to filter results with package type, allowed values: basic, silver, gold, platinum
+message GetSpecialistsResponse {
+  repeated DetailedSpecialist specialists = 1;
+  string next_token = 2;
+}
+
+message DetailedSpecialist {
+  generics.Specialist specialist = 1;
+  string country = 2;
+}
+
+message BasicInfo {
+  generics.Title title = 1; // deprecated
+  string first_name = 2;
+  string last_name = 3;
+  generics.DateTime birth_date = 4;
+  string image_url = 5;
+  string phone_number = 6;
+  generics.Gender gender = 7;
+  generics.MedicalTitle medical_title = 8;
+}
+
+message Location {
+  string street = 1;
+  string number = 2;
+  // string phone_number = 3; // DEPRECATED
+  string postal_code = 4;
+  string city = 5;
+  string country = 6;
+  string additional_numbers = 7; // DEPRECATED
+  string neighborhood = 8;
+  string formatted_address = 9;
+  generics.Coordinates coordinates = 10;
+}
+
+message MedicalCredentials {
+  string dea_number_url = 1;
+  generics.DateTime dea_number_expiry_date = 2;
+
+  string board_certification_url = 3;
+  generics.DateTime board_certification_expiry_date = 4;
+
+  string current_state_license_number_url = 5;
+  generics.DateTime current_state_license_number_expiry_date = 6;
+}
+
+message MedicalCategories {
+  repeated medical_categories.MedicalCategoryBase categories = 1;
+}
+
+message Status {
+  enum ApprovalStatus {
+    UNKNOWN_STATUS = 0;
+    WAITING = 1;
+    VERIFIED = 2;
+    REJECTED = 3;
+  }
+
+  enum PackageType {
+    UNKNOWN_PACKAGE = 0;
+    BASIC = 1;
+    SILVER = 2;
+    GOLD = 3;
+    PLATINUM = 4;
+  }
+
+  bool onboarding_completed = 1;
+  // Fields concern only external specialist
+  ApprovalStatus approval_status = 2;
+  PackageType package_type = 3;
+  uint64 trial_ends_at = 4;
+  bool has_seen_pricing_tables = 5;
+}
+
+message MedicalInfo {
+  MedicalCredentials medical_credentials = 1;
+  repeated medical_categories.MedicalCategoryBase medical_categories = 2;
+}
+
+message Bio {
+  string description = 1;
+  repeated EducationEntry education = 2;
+  repeated WorkExperienceEntry work_experience = 3;
+}
+
+message EducationEntry {
+  string school = 1;
+  string field_of_study = 2;
+  string degree = 3;
+  uint32 start_year = 4;
+  uint32 end_year = 5; // 0 if still in progress
+}
+
+message WorkExperienceEntry {
+  string institution = 1;
+  string position = 2;
+  uint32 start_year = 3;
+  uint32 end_year = 4; // 0 if still in progress
+}
+
+message CategoryPricesResponse {
+  uint64 medical_category_id = 1;
+  string medical_category_name = 2;
+  string medical_category_image_url = 3;
+  uint64 price_minutes_15 = 4;
+  uint64 price_minutes_30 = 5;
+  uint64 price_minutes_45 = 6;
+  uint64 price_minutes_60 = 7;
+  uint64 price_second_opinion = 8;
+  bool prices_enabled = 9;
+  string currency = 10;
+  uint64 price_in_office = 11;
+  string currency_in_office = 12;
+}
+
+message CategoryPricesRequest {
+  uint64 medical_category_id = 1;
+  uint64 price_minutes_15 = 2;
+  uint64 price_minutes_30 = 3;
+  uint64 price_minutes_45 = 4;
+  uint64 price_minutes_60 = 5;
+  uint64 price_second_opinion = 6;
+  string currency = 7; // 3 letters ISO code, only currently available currencies, right now: "USD", "AED", "INR"
+  uint64 price_in_office = 8;
+  string currency_in_office = 9;
+}

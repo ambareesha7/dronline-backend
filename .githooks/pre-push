@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# echo "Pre-push: dialyzer"
+# mix dialyzer --halt-exit-status
+
+echo "Pre-push: tests"
+mix test --warnings-as-errors

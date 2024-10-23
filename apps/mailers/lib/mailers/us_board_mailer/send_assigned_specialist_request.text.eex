@@ -1,0 +1,11 @@
+The new Patient just sent a U.S. Board Second Opinion request - please analyze the attached documents and provide a written reply via the DrOnline Specialist web platform.
+View request <%= link %>
+
+The patient is expecting your reply within 3-5 business days.
+
+Best Regards,
+DrOnline Team
+
+PS: Our team works tirelessly to improve healthcare accessibility and quality worldwide. Specialists are probably the most important part of that mission, so if you have any feedback, please, let us know!
+
+<%= footer_text() %>

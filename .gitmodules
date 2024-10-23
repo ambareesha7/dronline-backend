@@ -1,0 +1,3 @@
+[submodule "apps/proto/proto_submodule"]
+	path = apps/proto/proto_submodule
+	url = git@github.com:Dronline-Inc/dronline-protobuf.git

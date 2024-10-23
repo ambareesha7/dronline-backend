@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package medical_categories;
+
+import "elixir.proto";
+import "doctors.proto";
+import "generics.proto";
+
+option (elixir_module_prefix) = "Proto.MedicalCategories";
+
+// GET /api/medical_categories
+message GetMedicalCategoriesResponse {
+  repeated MedicalCategory categories = 1;
+}
+
+// GET /api/medical_categories/<medical_category_id>
+message GetMedicalCategoryResponse {
+  MedicalCategory category = 1;
+  repeated MedicalCategory subcategories = 2;
+}
+
+// GET /api/medical_categories/<medical_category_id>/featured_doctors
+message GetMedicalCategoryFeaturedDoctorsResponse {
+  repeated doctors.FeaturedDoctor deprecated = 1; // DEPRECATED
+  repeated generics.Specialist featured_doctors = 2;
+}
+
+// GET /admin_api/medical_categories
+// GET /panel_api/medical_categories
+message GetAllMedicalCategoriesResponse {
+  repeated MedicalCategoryBase categories = 1;
+}
+
+// UPDATE /admin_api/medical_categories/:id
+message UpdateMedicalCategoryResponse {
+  MedicalCategoryBase categories = 1;
+}
+
+message UpdateMedicalCategoryRequest{
+  uint64 id = 1;
+  bool disabled = 2;
+  uint64 position = 3;
+}
+
+message MedicalCategory {
+  enum VisitType {
+    ONLINE = 0;
+    IN_OFFICE = 1;
+    BOTH = 2;
+  }
+
+  uint64 id = 1;
+  string name = 2;
+  string image_url = 3;
+  string icon_url = 4;
+  string what_we_treat_url = 5;
+  VisitType visit_type = 6;
+}
+
+message MedicalCategoryBase {
+  uint64 id = 1;
+  string name = 2;
+  uint64 parent_category_id = 3;
+}

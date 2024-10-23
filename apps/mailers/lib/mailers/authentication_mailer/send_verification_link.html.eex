@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<%= head_html(css) %>
+
+<body>
+    <%= header_html(sign_in: false) %>
+
+    <div class="content center">
+        <div class="banner">
+            <img class="banner-image" src="https://storage.googleapis.com/dronline-prod/images/mailer_content/banner_forgot_password.png" />
+        </div>
+        <h1 class="title">
+            We’ve received your email
+        </h1>
+        <section>
+            <p>
+                Please, click the following link to confirm your email address and complete creating account in DrOnline.
+            </p>
+
+            <a href="<%= link %>" class="blue-button">
+                Verify
+            </a>
+
+            <p>
+                If it was a mistake, just ignore this email.
+            </p>
+        </section>
+    </div>
+
+    <%= footer_html() %>
+</body>
+</html>

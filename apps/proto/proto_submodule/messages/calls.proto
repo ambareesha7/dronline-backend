@@ -1,0 +1,355 @@
+syntax = "proto3";
+
+package calls;
+
+import "elixir.proto";
+import "emr.proto";
+import "forms.proto";
+import "generics.proto";
+import "visits.proto";
+
+option (elixir_module_prefix) = "Proto.Calls";
+
+
+// GET /api/calls/local_clinic?lat=52.00&lon=10.00
+message LocalClinicResponse {
+    oneof clinic {
+        Clinic local_clinic = 1;
+    }
+}
+
+message Clinic {
+    string name = 1;
+    string logo_url = 2;
+}
+
+// GET /panel_api/calls/patients_queue (DEPRECATED)
+// GET /panel_api/calls/patients_queue_v2
+//
+// used to fetch current state before any update will be delivered through channel
+// or after socket disconnect to synchronize
+message GetPatientsQueueResponse {
+  PatientsQueue patients_queue = 1;
+}
+
+// GET /panel_api/calls/pending_nurse_to_gp_calls
+//
+// used to fetch current state before any update will be delivered through channel
+// or after socket disconnect to synchronize
+message GetPendingNurseToGPCallsResponse {
+  PendingNurseToGPCalls pending_calls = 1;
+}
+
+// DEPRECATED
+// GET /panel_api/calls/queue_to_doctor/<category_id>
+//
+// used to fetch current state before any update will be delivered through channel
+// or after socket disconnect to synchronize
+message GetQueueToDoctorResponse {
+  QueueToDoctor queue_to_doctor = 1;
+}
+
+// GET /panel_api/calls/doctor_category_invitations/<category_id>
+//
+// used to fetch current state before any update will be delivered through channel
+// or after socket disconnect to synchronize
+message GetDoctorCategoryInvitationsResponse {
+  DoctorCategoryInvitations doctor_category_invitations = 1;
+}
+
+// GET and PUT requests at /api/calls/hpi should be
+// used before call to GP. They respectively fetch
+// and update HPI for active record
+
+// GET /api/calls/hpi
+message GetHPIResponse {
+  emr.HPI hpi = 1;
+}
+
+// PUT /api/calls/hpi
+message UpdateHPIRequest {
+  forms.Form hpi = 1;
+}
+message UpdateHPIResponse {
+  emr.HPI hpi = 1;
+  uint64 record_id = 2;
+}
+
+// GET /panel_api/calls/<call_id>/patient_location_coordinates
+//
+// Returns empty message if patient doesn't allow to track his location or
+// if call is not ongoing
+//
+// Scopes: "GP"
+message GetPatientLocationCoordinatesResponse {
+  generics.Coordinates patient_location_coordinates = 1;
+}
+
+// CHANNEL PAYLOAD
+message JoinQueue {
+  uint64 record_id = 1;
+  generics.Coordinates patient_location = 2;
+  visits.PaymentsParams payment_params = 3;
+}
+
+// CHANNEL PAYLOAD
+message LeaveQueue {
+}
+
+// CHANNEL PAYLOAD
+message CallGP {
+  uint64 patient_id = 1; // id of patient from current dispatch
+  uint64 record_id = 2; // id of record from current dispatch
+}
+
+// CHANNEL PAYLOAD
+message CancelCallToGP {
+}
+
+message AnswerCallFromNurse {
+  uint64 nurse_id = 1;
+}
+
+// CHANNEL PAYLOAD
+message StartCall {
+  uint64 caller_id = 2;
+}
+
+// DEPRECATED
+// CHANNEL PAYLOAD
+message InviteDoctor {
+  uint64 category_id = 1; // category of doctor you want to call
+  uint64 patient_id = 2;
+  uint64 record_id = 3;
+  string current_session_id = 4;
+}
+
+// DEPRECATED
+// CHANNEL PAYLOAD
+message CancelCallToDoctor {
+  uint64 category_id = 1; // category of doctor you wanted to call
+}
+
+// DEPRECATED
+// CHANNEL PAYLOAD
+message AnswerCallToDoctor {
+  enum Caller {
+    UNKNOWN = 0; // invalid :)
+    GP = 1;
+    NURSE = 2;
+  }
+
+  uint64 category_id = 1;
+  Caller caller = 2;
+  uint64 caller_id = 3;
+  string session_id = 4; // empty when answering to the new call
+  string call_id = 5;
+}
+
+// CHANNEL PAYLOAD
+message InviteDoctorCategory {
+  uint64 category_id = 1; // category of doctor you want to call
+  uint64 patient_id = 2;
+  uint64 record_id = 3;
+  string current_session_id = 4;
+}
+
+// CHANNEL PAYLOAD
+message CancelDoctorCategoryInvitation {
+  uint64 category_id = 1; // category of doctor you want to call
+  string call_id = 2;
+}
+
+// CHANNEL PAYLOAD
+message AcceptDoctorCategoryInvitation {
+  uint64 category_id = 1; // category of doctor you want to call
+  string call_id = 2;
+}
+
+// CHANNEL PAYLOAD
+message PatientsQueue {
+  repeated PatientsQueueEntry patients_queue_entries = 1;
+  repeated PatientsQueueEntryV2 patients_queue_entries_v2 = 2;
+}
+
+// DEPRECATED
+message PatientsQueueEntry {
+  generics.Patient patient = 1;
+  uint64 record_id = 2;
+}
+
+message PatientsQueueEntryV2 {
+  uint64 record_id = 1;
+  uint64 patient_id = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string avatar_url = 5;
+  generics.Gender gender = 6;
+  bool is_signed_up = 7;
+}
+
+message PendingNurseToGPCalls {
+  repeated PendingNurseToGPCall pending_calls = 1;
+}
+
+message PendingNurseToGPCall {
+  generics.Specialist nurse = 1;
+  uint64 patient_id = 2;
+  uint64 record_id = 3;
+}
+
+// CHANNEL PAYLOAD
+message QueueToDoctor {
+  message Caller {
+    enum Type {
+      UNKNOWN = 0;
+      GP = 1;
+      NURSE = 2;
+    }
+
+    uint64 caller_id = 1;
+    Type type = 2;
+    string first_name = 3;
+    string last_name = 4;
+    uint64 join_timestamp = 5; // queue join timestamp in case of merging two queues
+    string session_id = 6; // empty when it is invitation to a new call
+    string call_id = 7;
+    uint64 patient_id = 8;
+    uint64 record_id = 9;
+  }
+
+  uint64 category_id = 1;
+  repeated Caller queue = 2;
+}
+
+message DoctorCategoryInvitations {
+  uint64 category_id = 1;
+  repeated DoctorCategoryInvitation invitations = 2;
+}
+
+message DoctorCategoryInvitation {
+  generics.Specialist invited_by = 1;
+  string call_id = 2;
+  uint64 patient_id = 3;
+  uint64 record_id = 4;
+  uint64 sent_at = 5; // invitation creation timestamp in case of merging two queues
+}
+
+// CHANNEL PAYLOAD
+message CallEstablished {
+  string token = 1;
+  string session_id = 2;
+  uint64 patient_id = 3; // mobile app can ignore this
+  uint64 record_id = 4; // mobile app can ignore
+  string api_key = 5;
+  string call_id = 6;
+}
+
+message EndCallForAll {
+}
+
+message CallEnded {
+}
+
+// POST /panel_api/calls/nurse_patient_calls
+// Sent by clients to start call between a nurse and a patient
+message NursePatientCallRequest {
+  uint64 patient_id = 1;
+  uint64 record_id = 2;
+}
+
+// Information used to establish a video call
+message NursePatientCallResponse {
+  uint64 patient_id = 1;
+  string session_id = 2;
+  string nurse_session_token = 3;
+  string call_id = 4;
+  string api_key = 5;
+}
+
+// POST /panel_api/calls/specialist_patient_calls
+// Sent by clients to start call between a Specialist and a patient
+message SpecialistPatientCallRequest {
+  uint64 patient_id = 1;
+}
+
+// Information used to establish a video call
+message SpecialistPatientCallResponse {
+  uint64 patient_id = 1;
+  string session_id = 2;
+  string specialist_session_token = 3;
+  string call_id = 4;
+  string api_key = 5;
+  uint64 record_id = 6;
+}
+
+// POST /panel_api/calls/make_visit_calls
+// Sent by clients to start scheduled call between a doctor and a patient
+// DEPRECATED
+message VisitCallRequest {
+  uint64 visit_id = 1;
+}
+
+message VisitCallResponse {
+  uint64 patient_id = 1;
+  uint64 record_id = 6;
+  string session_id = 2;
+  string doctor_session_token = 3;
+  string call_id = 4;
+  string api_key = 5;
+}
+
+// POST /panel_api/calls/pending_visit_call
+// Scopes: GP
+message PendingVisitCallRequest {
+  string visit_id = 1;
+}
+
+message PendingVisitCallResponse {
+  uint64 patient_id = 1;
+  uint64 record_id = 2;
+  string session_id = 3;
+  string gp_session_token = 4;
+  string call_id = 5;
+  string api_key = 6;
+}
+
+// POST /panel_api/calls/doctor_pending_visit_call
+// Scopes: EXTERNAL
+message DoctorPendingVisitCallRequest {
+  string visit_id = 1;
+}
+
+message DoctorPendingVisitCallResponse {
+  uint64 patient_id = 1;
+  uint64 record_id = 2;
+  string session_id = 3;
+  string doctor_session_token = 4;
+  string call_id = 5;
+  string api_key = 6;
+}
+
+// POST /api/calls/family_member_invitations
+message CreateFamilyMemberInvitationRequest {
+  string session_id = 1;
+  string call_id = 2;
+  string phone_number = 3;
+  string name = 4;
+}
+
+// GET /public_api/calls/family_member_invitations/<invitation_id>
+// 404 response has to be handled, as invitations will expire
+message GetFamilyMemberInvitationResponse {
+  FamilyMemberInvitation invitation = 1;
+  string api_key = 2;
+  generics.Patient patient = 3;
+}
+
+message FamilyMemberInvitation {
+  string id = 1;
+  string session_id = 3;
+  string call_id = 4;
+  string phone_number = 5;
+  string session_token = 6;
+  string name = 7;
+}

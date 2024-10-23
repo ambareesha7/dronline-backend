@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package notifications;
+
+import "elixir.proto";
+import "emr.proto";
+import "generics.proto";
+
+option (elixir_module_prefix) = "Proto.Notifications";
+
+// GET /panel_api/notifications
+message GetNotificationsResponse {
+  repeated Notification notifications = 1;
+  repeated generics.Specialist specialists = 2;
+  uint32 unread_notifications_counter = 3;
+  string next_token = 4;
+}
+
+// GET /api/notifications/unread_count
+// GET /panel_api/notifications/unread_count
+// POST /api/notifications/<notification_id>/mark_as_read
+// POST /panel_api/notifications/<notification_id>/mark_as_read
+message NotificationsCounterResponse{
+  uint32 unread_notifications_counter = 1;
+}
+
+// POST /api/notifications/mark_all_as_read
+// POST /panel_api/notifications/mark_all_as_read
+message MarkAllNotificationsAsReadResponse{}
+
+// CHANNEL PAYLOAD
+message NewNotification{
+  Notification notification = 1;
+  repeated generics.Specialist specialists = 2;
+  uint32 unread_notifications_counter = 3;
+}
+
+message Notification {
+  string id = 1;
+  uint64 created_at = 2;
+  bool read = 3;
+
+  oneof type {
+    TimelineItemCommentNotification timeline_item_comment_notification = 4;
+  }
+}
+
+message TimelineItemCommentNotification{
+  uint64 patient_id = 1;
+  uint64 record_id = 2;
+  string timeline_item_id = 3;
+  emr.TimelineItemComment timeline_item_comment = 4;
+  string commented_on = 5; // Type of timeline item, e.g. "Order Procedure"
+}
+
+// GET /api/notifications
+message GetPatientNotificationsResponse {
+  repeated PatientNotification notifications = 1;
+  repeated generics.Specialist specialists = 2;
+  string next_token = 3;
+}
+
+message PatientNotification {
+  string id = 1;
+  uint64 created_at = 2;
+  bool read = 3;
+
+  oneof type {
+    MedicalSummarySubmittedNotification medical_summary_submitted_notification = 4;
+    TestsOrderedNotification tests_ordered_notification = 5;
+    MedicationsAssignedNotification medications_assigned_notification = 6;
+  }
+}
+
+message MedicalSummarySubmittedNotification{
+  message MedicalSummary {
+    uint64 id = 1;
+    uint64 record_id = 2;
+  }
+
+  uint64 specialist_id = 1;
+  MedicalSummary medical_summary = 2;
+}
+
+message TestsOrderedNotification{
+  message TestsBundle {
+    uint64 id = 1;
+    uint64 record_id = 2;
+  }
+
+  uint64 specialist_id = 1;
+  TestsBundle tests_bundle = 2;
+}
+
+message MedicationsAssignedNotification{
+  message MedicationsBundle {
+    uint64 id = 1;
+    uint64 record_id = 2;
+  }
+
+  uint64 specialist_id = 1;
+  MedicationsBundle medications_bundle = 2;
+}

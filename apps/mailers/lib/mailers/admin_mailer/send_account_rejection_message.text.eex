@@ -1,0 +1,5 @@
+Your application has been rejected
+
+We are sorry, but we must reject your application due to invalid medical credentials.
+
+<%= footer_text() %>
