@@ -1,0 +1,536 @@
+<!-- livebook:{"file_entries":[{"name":"urls.png","type":"attachment"}]} -->
+
+# Dev docs - fork
+
+## Section
+
+```elixir
+# :crypto.strong_rand_bytes(2)
+# System.find_executable("elixir")
+f = %{name: "Alice", age: 30}
+
+defmodule Meds do
+  defstruct [:status]
+end
+
+# %Meds{status: nil}
+# %Meds{status: :none} = med
+```
+
+```elixir
+med = %Meds{status: :none}
+# %Meds{status: nil} = med
+```
+
+UPDATE administrators
+SET password_hash = 'new_password'
+WHERE email = 'email';
+
+INSERT INTO administrators (id, email, auth_token, password_hash, inserted_at, updated_at) 
+VALUES ('5', 'dr-stg@dronline.com', 'Mi9JQzQxbVp0UjZYOXNuY2FMemlLWkVXTmtxU0R2L3RURldvOWw5MwTVRjeE56QTJOVGN4TlE9PQ', '$pbkdf2-sha512$160000$bRgbYVTsUNaFMVDQNoXDQg$KHNFUxD.7x2ofLTvKtQ29mBorwb7Xr14VAP33qFRaMZAubJo2lVQndeYNsH41ZZeYBxFSRquofqudkKrydTKhw', '2024-05-30 10:41:56.203192', '2024-05-30 10:41:56.203192');
+
+id: 1,
+   email: "dr-stg@dronline.com",
+   auth_token: "Mi9JQzQxbVp0UjZYOXNuY2FMemlLWkVXTmtxU0R2L3RURldvOWw5MwTVRjeE56QTJOVGN4TlE9PQ",
+   password: "Pass@1234",
+   password_hash: "$pbkdf2-sha512$160000$bRgbYVTsUNaFMVDQNoXDQg$KHNFUxD.7x2ofLTvKtQ29mBorwb7Xr14VAP33qFRaMZAubJo2lVQndeYNsH41ZZeYBxFSRquofqudkKrydTKhw",
+   inserted_at: ~N[2024-05-30 10:41:56.203192],
+   updated_at: ~N[2024-05-30 10:41:56.203192]
+
+<!-- livebook:{"break_markdown":true} -->
+
+![](files/urls.png)
+
+<!-- livebook:{"break_markdown":true} -->
+
+###### Login credentials
+
+| Section | Workig | URL | ID  | Password |
+| ------- | ------ | --- | --- | -------- |
+
+* Production
+
+GP | Yes | https://web.dronline.me/sign_in | dronline+gp@appunite.com | Password1!
+
+<hr />
+
+Login staging
+
+* Url:- https://backend.stg.dronline.me/admin_api/login 
+  <br>   ID: dr-stg@dronline.com Password: Pass@1234
+  <hr />
+
+* GCP database password
+
+  * prod: <br> gRYA1Ie0{%p2Z9Y_
+  * stg: <br> 
+    DB name: dronline_stg 
+    <br>password: <br> X^9D|QFJAQX{s"{(
+
+<!-- livebook:{"break_markdown":true} -->
+
+* Kubernetes
+
+kubectl -n dronline-stg get pods
+
+How to List all Containers Running in a Cluster <br>
+kubectl get pods --all-namespaces -o jsonpath="{.items[*].spec.containers[*].name}" | tr -s ' ' '\n' |sort |uniq -c
+
+```elixir
+# System.get_env("DBPASS", ~s(X^9D|QFJAQX{s"{())
+# st = System.get_env("DBPASS", ~r/X^9D|QFJAQX{s"{(/)
+db = "ecto://postgres:X^9D|QFJAQX{s{(@172.0.0.1:5432/dronline_stg"
+d = URI.parse(db)
+
+IO.inspect(d)
+```
+
+X^9D|QFJAQX{s"{(
+
+<!-- livebook:{"break_markdown":true} -->
+
+Sentry -->  
+ID ambi@dronline.ai pass: dron@01!
+
+```
+config :sentry,
+  dsn: "https://0ed806355213c01cefe87d8edc86c2dc@o4507378140053504.ingest.de.sentry.io/4507378185470032",
+  environment_name: Mix.env(),
+  enable_source_code_context: true,
+  root_source_code_paths: [File.cwd!()]
+```
+
+<!-- livebook:{"break_markdown":true} -->
+
+* node versions for frontend
+  * node-v10.24.1 - web
+  * node-v12.22.12 - admin
+  * node-v18.13.0 - landing
+
+### NOTES
+
+* received data is protobuf encoded data
+* protobuf decoding happens in a plug `Web.Plugs.DecodeProtobuf` and it inserted through a macro `Web.Macros.DecodeProtobuf` in Web controller, this plug reads and decodes the data and adds into conn under namespace of `protobuf` so we can access data like: conn.assign.protobuf
+
+###### code notes
+
+* This GCP url `https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com` is hardcoded in
+  --> `Firebase.Authentication.Client` module
+
+* This Firebase url `https://firebasedynamiclinks.googleapis.com/v1` is hardcoded in --> `Firebase.DynamicLinks.Backend` module
+
+* this url `https://www.googleapis.com/oauth2/v4/token` and 2 more urls are hardcoded in --> `PushNotifications.Firebase.OAuthClient` module
+
+* All email templetes are resides in `apps/mailers/lib/mailers`
+
+* all push notification messages and modules resides in `apps/push_notifications/lib/push_notifications/message`
+
+<!-- livebook:{"break_markdown":true} -->
+
+###### Medications
+
+* assigned medicine details are saved into `medications_bundles` table,
+  <br>regarding assigned medications->
+
+  ```
+    the price is not coming from frontend that's why the price_aed field was missing in the saved data in table
+  ```
+
+* all medicine payments are saved in `medications_bundle_payments` table
+
+* all medicines saved in `medical_medications` table & route is _/panel_api/emr/medical_library/medications_
+    |id|name|price_aed|
+    |-|-|-|
+    |1|medicine name|0|
+
+<!-- livebook:{"break_markdown":true} -->
+
+###### Payment gateway notes
+
+we are using Hosted Payment Page (in urgent calls)
+
+request structure[Telr docs](https://docs.telr.com/reference/payment-page):
+
+```shell
+curl --request POST \
+     --url https://secure.telr.com/gateway/order.json \
+     --header 'Content-Type: application/json' \
+     --header 'accept: application/json' \
+     --data '
+{
+  "method": "create",
+  "store": 1234,
+  "authkey": "mykey1234",
+  "framed": 0,
+  "order": {
+    "cartid": "1234",
+    "test": "1",
+    "amount": "10.50",
+    "currency": "AED",
+    "description": "My purchase"
+  },
+  "return": {
+    "authorised": "https://www.mysite.com/authorised",
+    "declined": "https://www.mysite.com/declined",
+    "cancelled": "https://www.mysite.com/cancelled"
+  }
+}
+'
+```
+
+our current body structure in `PaymentsApi.Client.Payment`
+
+````JSON
+ %{
+      method: "create",
+      store: "#{config[:store_id]}" |> String.to_integer(),
+      authkey: "#{config[:payment_authkey]}",
+      framed: 0,
+      order: %{
+        cartid: ref,
+        test: "#{config[:test_env]}",
+        amount: "#{format_amount(amount)}",
+        currency: currency,
+        description: description
+      },
+      return: %{
+        authorised: success_redirect_url,
+        declined: failure_redirect_url,
+        cancelled: failure_redirect_url
+      },
+      customer: %{
+        email: user_data.email,
+        name: %{
+          forenames: user_data.first_name,
+          surname: user_data.last_name
+        },
+        ref: ref
+      }
+    }
+    ```
+
+    Payment amount and testing email hardcoded in this module `UrgentCare.Initialize`
+````
+
+<!-- livebook:{"break_markdown":true} -->
+
+###### Patients
+
+patient_accounts
+
+1. with sign up - account is created by the patient, when they sign up using firebase through a mobile app. Then, they can fill in their basic info during onboarding.
+
+2. without sign up - account is created automatically, when they use Urgent Care on web. Then, their number is not verified and they don't fill in all Basic Info.
+
+Tables created in DB relating to patient
+patients -> main table, patient_id is mainly referencing from this table
+patient_accounts -> phone number is present here
+patient_auth_token_entries
+patient_account_deletions
+patient_addresses
+patient_auth_token_entries
+patient_basic_infos -> email, first and last name present in this table
+patient_bmis
+patient_devices
+patient_filter_datas
+patient_history_forms
+patient_invitations
+patient_ios_devices
+patient_notifications
+patients_family_relationship
+patients_queue
+patients_queue_projection
+patients_waiting_for_dispatch
+
+<!-- livebook:{"break_markdown":true} -->
+
+Medication order table
+
+```mermaid
+erDiagram
+    PATIENT ||--o{ MEDICATION-ORDER : places
+    PATIENT ||--|{ MEDICATION-BUNDLE : have
+    PATIENT {
+        int id
+        string name
+        string phone_number
+        
+    }
+    %%MEDICATION-ORDER ||--|{ MEDICATION-BUNDLE : contains
+    MEDICATION-ORDER {
+        uuid id
+          int bundle_id
+          int patient_id 
+          uuid medications_bundle_payments_id 
+          string delivery_address
+          string payment_status
+          string delivery_status
+    }
+    MEDICATION-BUNDLE ||--|{ MEDICATION : contains
+    MEDICATION-BUNDLE {
+        int id
+        string medications
+        int patient_id
+        int specialist_id
+    }
+    MEDICATION {
+        int id
+        string name
+        string direction
+        string quantity
+        int refills
+        int price_aed
+        
+    }
+```
+
+<!-- livebook:{"break_markdown":true} -->
+
+<!-- Learn more at https://mermaid-js.github.io/mermaid -->
+
+```mermaid
+graph TD;
+  A-->B;
+  A-->C;
+  B-->D;
+  C-->D;
+```
+
+<!-- livebook:{"break_markdown":true} -->
+
+#### bills related
+
+* `"https://api.sparkpost.com/api/v1"` this url is used for email sending in `Mailers.Sparkpost` but is it being billed?
+
+#### Doctor Signup notes
+
+* %{"type" => `"hospital-or-clinic"`} inserted into --> `specialists` table with type: GP and created a team
+  the handling module is `Admin.InternalSpecialists.InternalSpecialist`
+* %{"type" => `"specialist-group"`}  inserted into --> `specialists` table with type: EXTERNAL and created a teamthe handling module is `Authentication.Specialist`
+* remaining all doctors inserted into --> `specialists` table with type: EXTERNAL without team
+  the handling module is `Authentication.Specialist`
+
+#### Other notes
+
+* I need cloudsql_instance_connect permission in GCP to connect from my local machine
+
+* [ ] dronline-ops repo in this is pointing to appunite address
+  dronline-ops/v2/prod/dronline-backend
+  /deployment.yaml:23
+
+  * <span style="color:red">image: registry.appunite.com/dronline-images/dronline-backend:b63c8045 </span>
+    change this and pushing the image to Artifact Registry in DrOnline GCP
+
+###### URLs
+
+https://admin.stg.dronline.me/
+
+https://web.stg.dronline.me/
+
+https://play.google.com/console/u/0/developers/8174572317294783322/app-list
+
+https://console.firebase.google.com/
+
+<!-- livebook:{"break_markdown":true} -->
+
+TODO:
+
+<br />
+
+check this API is working or not -> https://backend.dronline.ai/landing_api/urgent_care_request
+
+<!-- livebook:{"break_markdown":true} -->
+
+###### Post-hog API
+
+DrOnline Patient Production - 
+phc_GxS2D3AvUlICO1p4kgMfaOKMBm6EL4Gcd0izpEp7d19
+projectID: 18093
+
+DrOnline Specialist Production - 
+phc_XqZf5KrWguxXZIkyGk84HS97Jl50b4nMoefcCocNaQ7
+17983
+
+Patient staging - 
+phc_qHuni8nfl7u5KDqj12p49aLpXSM0Wk13q8x4k8FK96B
+18096
+
+Staging Specialist 
+phc_KeCWBUQiI3V9si0V8AGas8MBuPmY52v1HHyywiExvyN
+17979
+
+<!-- livebook:{"break_markdown":true} -->
+
+###### Other APIs
+
+Telr 
+testing -> https://docs.telr.com/reference/test-cards
+
+<!-- livebook:{"break_markdown":true} -->
+
+###### Admin APIs
+
+Login staging
+
+* Url:- https://backend.stg.dronline.me/admin_api/login 
+  <br>   ID: dr-stg@dronline.com Password: Pass@1234
+
+1. https://backend.stg.dronline.me/admin_api/external_specialists GET
+2. https://backend.stg.dronline.me/admin_api/medical_categories GET
+3. https://admin.stg.dronline.me/static/images/woman-default.svg GET
+4. https://backend.stg.dronline.me/admin_api/external_specialists/428/basic_info GET
+5. https://backend.stg.dronline.me/admin_api/specialists/428/bio GET
+6. https://backend.stg.dronline.me/admin_api/external_specialists/428/credentials GET
+7. https://backend.stg.dronline.me/admin_api/external_specialists/428/location GET
+8. https://backend.stg.dronline.me/admin_api/external_specialists/428/medical_categories GET
+9. https://backend.stg.dronline.me/admin_api/external_specialists/428/medical_credentials GET
+10. https://backend.stg.dronline.me/admin_api/external_specialists/428 GET
+11. https://backend.stg.dronline.me/admin_api/account_deletions GET
+12. https://backend.stg.dronline.me/admin_api/external_specialists?filter=quary GET
+13. https://backend.stg.dronline.me/admin_api/us_board/fetch_us_board_specialists GET
+14. https://backend.stg.dronline.me/admin_api/us_board/fetch_requests GET
+15. https://backend.stg.dronline.me/admin_api/us_board/fetch_request/ID GET
+16. https://backend.stg.dronline.me/admin_api/external_specialists/428/verify POST
+17. https://backend.stg.dronline.me/admin_api/login POST
+
+<!-- livebook:{"break_markdown":true} -->
+
+###### Specialists API
+
+1. https://backend.stg.dronline.me/panel_api/visits/my_calendar?month=1717093800
+2. https://backend.stg.dronline.me/panel_api/emr/medications
+3. https://backend.stg.dronline.me/panel_api/profile/status
+4. https://backend.stg.dronline.me/panel_api/visits/pending_for_specialist?today=true
+5. https://backend.stg.dronline.me/panel_api/visits/pending_for_specialist?visit_types[]=ONLINE&exclude_today=true
+6. https://backend.stg.dronline.me/panel_api/profile/prices
+7. https://backend.stg.dronline.me/panel_api/emr/encounters/stats
+8. https://backend.stg.dronline.me/panel_api/emr/encounters
+9. https://backend.stg.dronline.me/panel_api/emr/patients/connected
+10. https://backend.stg.dronline.me/panel_api/emr/tests
+11. https://backend.stg.dronline.me/panel_api/emr/procedureshttps://backend.stg.dronline.me/panel_api/emr/procedures
+12. https://backend.stg.dronline.me/panel_api/membership
+13. https://backend.stg.dronline.me/panel_api/my_team/members
+14. https://backend.stg.dronline.me/panel_api/my_team/stats
+15. https://backend.stg.dronline.me/panel_api/my_team
+   16.
+
+<!-- livebook:{"break_markdown":true} -->
+
+###### Patient APIs
+
+Staging app
+
+1. https://backend.stg.dronline.me/api/login POST
+2. https://backend.stg.dronline.me/api/patient/status GET
+3. https://backend.stg.dronline.me/api/patient/credentials GET
+4. https://backend.stg.dronline.me/api/patient/children GET
+5. https://storage.googleapis.com/dronline-prod/images/placeholders/default_man_avatar.png?Expires=1716972800&GoogleAccessId=253819861912-compute%40developer.gserviceaccount.com&Signature=AjBLGFVhI6MEfNJa%2BgI3Kowhc5KPeL3EsW072laTm%2B2X41nY51Qym8INYqRL4ah1M0iZT9fLcTvvKd6nqtXVKPL3%2F96ZbVCRC8ectI2NT4PIqCqxe2hQnaYKq%2BRrPZtvEh5nmDKDWFk4D4FHL25IuWDNrDvBgwxdxZVyr%2FAcZZhGydDZ4nUVT2AyAwwIMMKxYTfmWvsxnAe6uB2j1ZnjuydVCiaqNBXAl%2FkVXW4qxymSD5%2BgWxUVL%2FbNKmbG5TRAoy1lshAkW0O%2FGqgbdPWNHss5uehcXGUyPRodHAvYTW4wmtkZsiRCMar%2Bd4GVpU0POhmObotqxmr0QrQ%2BiXvcwA%3D%3D GET
+6. https://backend.stg.dronline.me/api/devices PUT
+7. https://backend.stg.dronline.me/api/patient/address GET
+8. https://backend.stg.dronline.me/api/patient/address GET
+9. https://backend.stg.dronline.me/api/insurance_providers?country=in GET
+10. https://backend.stg.dronline.me/api/emr/vitals GET
+11. https://backend.stg.dronline.me/api/patient/history GET
+12. https://backend.stg.dronline.me/api/patient/review_of_system/history GET
+13. https://backend.stg.dronline.me/api/notifications/unread_count GET
+14. https://backend.stg.dronline.me/api/calls/local_clinic?lat=0.0&lon=0.0 GET
+15. https://backend.stg.dronline.me/api/medical_categories GET
+16. https://backend.stg.dronline.me/api/featured_doctors GET
+17. https://storage.googleapis.com/dronline-prod/images/placeholders/default_man_avatar.png?Expires=1716973195&GoogleAccessId=253819861912-compute%40developer.gserviceaccount.com&Signature=Zlt6%2FZyIGxJiPEbFWn1pgo%2F93P37C0jtAXpELYvkuQE2mOhoQahwH5Z7kD1%2BS27KcjwTbe7tSdrLk5r1BOrzKedgGHjkfLyPYx%2BVhXuO7knzlgmBBPub5blxAL2nDjk75YcjNax9h2dHsUb0xgtXfeGXqsGOQ0G76AxdUZAXfMsPDPZpwNcKTtahAIgpgNSfvxiCwL1pFr5ztH7tbSHYp1ekDZt6PM%2FUCgWSsrImZQ%2FX0fJzd%2FLjvIB3Cah5lUOuseVIxWitc2bQ4FMecHx%2FdqoHNGMQDoSaHcQiqYmXiEDUEcd67SHSZVmze%2BEplqhYqVuF63oVR56gZ8kNTGXUFA%3D%3D GET
+18. https://backend.stg.dronline.me/public_api/feature_flags/verify/show_us_board_banner GET
+19. https://backend.stg.dronline.me/api/visits/index_us_board_second_opinion GET
+20. https://storage.googleapis.com/dronline-dev/images/specialists/283181c8-76df-442d-9e9f-454885e722e4.png GET
+21. https://backend.stg.dronline.me/api/specialists?lat=12.8911775&lon=77.6146885 GET
+
+<!-- livebook:{"break_markdown":true} -->
+
+* Send email and sms
+  in `EMR.PatientInvitations.Create`
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+  defp send_patient_email(invitation_proto, dynamic_link, specialist_data) do
+    %{
+      type: "PATIENT_INVITATION",
+      dynamic_link: dynamic_link,
+      patient_email: invitation_proto.email,
+      specialist_data: specialist_data
+    }
+    |> Mailers.MailerJobs.new()
+    |> Oban.insert()
+  end
+  defp send_sms(%{phone_number: ""}, _, _), do: :ok
+  defp send_sms(%{phone_number: nil}, _, _), do: :ok
+
+  defp send_sms(invitation_proto, dynamic_link, specialist_data) do
+    body =
+      "Dr. #{specialist_data.last_name} invites you " <>
+        "to signup and join him on DrOnline " <>
+        "to schedule your visit. #{dynamic_link}"
+
+    resp =
+      mockable(Twilio.SMSClient, by: Twilio.SMSClientMock).send(
+        invitation_proto.phone_number,
+        body
+      )
+
+    case resp do
+      :ok ->
+        :ok
+
+      {:error, {:ok, %Tesla.Env{body: %{"message" => message}}}} ->
+        {:error, message}
+    end
+  end
+
+```
+
+* Dynamic links code in `Firebase.DynamicLinks.Backend`
+* Email cron jobs in `Mailers.MailerJobs`
+
+<!-- livebook:{"break_markdown":true} -->
+
+https://www.google.com/search?q=kubernetes+in+elixir&oq=kubernetes+in+elixir&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIGCAEQRRg8MgYIAhAuGEDSAQg4NzQ0ajBqMagCALACAA&sourceid=chrome&ie=UTF-8
+
+generate medication_order table <br>
+`mix phx.gen.context MedicationOrders MedicationOrder medication_orders bundle_id:references:medications_bundles patient_id:references:patients delivery_address delivery_status:enum:delivered:cancelled:in_progress:assigned payment_status:enum:paid:cancelled:pending:failed:authorised  --binary-id --migration-dir ../postgres/priv/repo/migrations`
+
+<!-- livebook:{"break_markdown":true} -->
+
+###### Daily work focuse
+
+10/6/24 ->
+
+1. complete email sending feature,
+2. push code to staging env and test it
+3. test payment feature
+
+* In Priority:-
+  * Medicine price and payment gateway
+  * Medicine prices on admin panel
+  * Medicine orders on admin panel
+
+Hi some text name doctor name assigned you 
+["www.dronline.ai/medication_order?id=#{bundle.id}"]("www.dronline.ai/medication_order?id=#{bundle.id}")
+can you check what data is coming on this endpoint "panel_api/emr/medications"
+this url("www.dronline.ai/medication_order?id=#{bundle.id}") will send in sms/email
+this would get endpoint to get medication bundle details "landing_api/assigned_meds/:bundle_id"
+
+<!-- livebook:{"break_markdown":true} -->
+
+bundles: bundles,
+
+```
+  amount: amount,
+  specialist: specialist,
+  patient: patient
+```
+
+<!-- livebook:{"break_markdown":true} -->
+
+* Flutter
+
+erroes in api call
+DioError ║ Status: 500 Internal Server Error
+I/flutter (13452): ║  https://backend.stg.dronline.me/api/emr/records/2245/medications/133

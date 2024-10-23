@@ -1,0 +1,194 @@
+<!-- livebook:{"file_entries":[{"name":"urls.png","type":"attachment"}]} -->
+
+# Dev docs
+
+## Section
+
+```elixir
+IO.puts("hello")
+:crypto.strong_rand_bytes(2)
+```
+
+UPDATE administrators
+SET password_hash = 'new_password'
+WHERE email = 'email';
+
+INSERT INTO administrators (id, email, auth_token, password_hash, inserted_at, updated_at) 
+VALUES ('5', 'dr-stg@dronline.com', 'Mi9JQzQxbVp0UjZYOXNuY2FMemlLWkVXTmtxU0R2L3RURldvOWw5MwTVRjeE56QTJOVGN4TlE9PQ', '$pbkdf2-sha512$160000$bRgbYVTsUNaFMVDQNoXDQg$KHNFUxD.7x2ofLTvKtQ29mBorwb7Xr14VAP33qFRaMZAubJo2lVQndeYNsH41ZZeYBxFSRquofqudkKrydTKhw', '2024-05-30 10:41:56.203192', '2024-05-30 10:41:56.203192');
+
+id: 1,
+   email: "dr-stg@dronline.com",
+   auth_token: "Mi9JQzQxbVp0UjZYOXNuY2FMemlLWkVXTmtxU0R2L3RURldvOWw5MwTVRjeE56QTJOVGN4TlE9PQ",
+   password: "Pass@1234",
+   password_hash: "$pbkdf2-sha512$160000$bRgbYVTsUNaFMVDQNoXDQg$KHNFUxD.7x2ofLTvKtQ29mBorwb7Xr14VAP33qFRaMZAubJo2lVQndeYNsH41ZZeYBxFSRquofqudkKrydTKhw",
+   inserted_at: ~N[2024-05-30 10:41:56.203192],
+   updated_at: ~N[2024-05-30 10:41:56.203192]
+
+<!-- livebook:{"break_markdown":true} -->
+
+![](files/urls.png)
+
+<!-- livebook:{"break_markdown":true} -->
+
+###### Login credentials
+
+| Section | Workig | URL | ID  | Password |
+| ------- | ------ | --- | --- | -------- |
+
+* Production
+
+GP | Yes | https://web.dronline.me/sign_in | dronline+gp@appunite.com | Password1!
+
+<hr />
+
+Login staging
+
+* Url:- https://backend.stg.dronline.me/admin_api/login 
+  <br>   ID: dr-stg@dronline.com Password: Pass@1234
+  <hr />
+
+* GCP database password 
+  * prod: <br> gRYA1Ie0{%p2Z9Y_
+  * stg: <br> X^9D|QFJAQX{s"{(
+
+<!-- livebook:{"break_markdown":true} -->
+
+* node versions for frontend
+  * node-v10.24.1 - web
+  * node-v12.22.12 - admin
+  * node-v18.13.0 - landing
+
+### NOTES
+
+* received data is protobuf encoded data
+* protobuf decoding happens in a plug `Web.Plugs.DecodeProtobuf` and it inserted through a macro `Web.Macros.DecodeProtobuf` in Web controller, this plug reads and decodes the data and adds into conn under namespace of `protobuf` so we can access data like: conn.assign.protobuf
+
+###### code notes
+
+* This GCP url `https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com` is hardcoded in
+  --> `Firebase.Authentication.Client` module
+
+* This Firebase url `https://firebasedynamiclinks.googleapis.com/v1` is hardcoded in --> `Firebase.DynamicLinks.Backend` module
+
+* this url `https://www.googleapis.com/oauth2/v4/token` and 2 more urls are hardcoded in --> `PushNotifications.Firebase.OAuthClient` module
+
+* All email templetes are resides in `apps/mailers/lib/mailers`
+
+* all push notification messages and modules resides in `apps/push_notifications/lib/push_notifications/message`
+
+<!-- livebook:{"break_markdown":true} -->
+
+#### bills related
+
+* `"https://api.sparkpost.com/api/v1"` this url is used for email sending in `Mailers.Sparkpost` but is it being billed?
+
+#### Doctor Signup notes
+
+* %{"type" => `"hospital-or-clinic"`} inserted into --> `specialists` table with type: GP and created a team
+  the handling module is `Admin.InternalSpecialists.InternalSpecialist`
+* %{"type" => `"specialist-group"`}  inserted into --> `specialists` table with type: EXTERNAL and created a teamthe handling module is `Authentication.Specialist`
+* remaining all doctors inserted into --> `specialists` table with type: EXTERNAL without team
+  the handling module is `Authentication.Specialist`
+
+#### Patient (`patient_accounts`)
+
+1. with sign up - account is created by the patient, when they sign up using firebase through a mobile app. Then, they can fill in their basic info during onboarding.
+
+2. without sign up - account is created automatically, when they use Urgent Care on web. Then, their number is not verified and they don't fill in all Basic Info.
+
+#### Other notes
+
+* I need cloudsql_instance_connect permission in GCP to connect from my local machine
+
+* [ ] dronline-ops repo in this is pointing to appunite address
+  dronline-ops/v2/prod/dronline-backend
+  /deployment.yaml:23
+
+  * <span style="color:red">image: registry.appunite.com/dronline-images/dronline-backend:b63c8045 </span>
+    change this and pushing the image to Artifact Registry in DrOnline GCP
+
+###### URLs
+
+https://admin.stg.dronline.me/
+
+https://web.stg.dronline.me/
+
+https://play.google.com/console/u/0/developers/8174572317294783322/app-list
+
+https://console.firebase.google.com/
+
+<!-- livebook:{"break_markdown":true} -->
+
+###### Admin APIs
+
+Login staging
+
+* Url:- https://backend.stg.dronline.me/admin_api/login 
+  <br>   ID: dr-stg@dronline.com Password: Pass@1234
+
+1. https://backend.stg.dronline.me/admin_api/external_specialists GET
+2. https://backend.stg.dronline.me/admin_api/medical_categories GET
+3. https://admin.stg.dronline.me/static/images/woman-default.svg GET
+4. https://backend.stg.dronline.me/admin_api/external_specialists/428/basic_info GET
+5. https://backend.stg.dronline.me/admin_api/specialists/428/bio GET
+6. https://backend.stg.dronline.me/admin_api/external_specialists/428/credentials GET
+7. https://backend.stg.dronline.me/admin_api/external_specialists/428/location GET
+8. https://backend.stg.dronline.me/admin_api/external_specialists/428/medical_categories GET
+9. https://backend.stg.dronline.me/admin_api/external_specialists/428/medical_credentials GET
+10. https://backend.stg.dronline.me/admin_api/external_specialists/428 GET
+11. https://backend.stg.dronline.me/admin_api/account_deletions GET
+12. https://backend.stg.dronline.me/admin_api/external_specialists?filter=quary GET
+13. https://backend.stg.dronline.me/admin_api/us_board/fetch_us_board_specialists GET
+14. https://backend.stg.dronline.me/admin_api/us_board/fetch_requests GET
+15. https://backend.stg.dronline.me/admin_api/us_board/fetch_request/ID GET
+16. https://backend.stg.dronline.me/admin_api/external_specialists/428/verify POST
+17. https://backend.stg.dronline.me/admin_api/login POST
+
+<!-- livebook:{"break_markdown":true} -->
+
+###### Specialists API
+
+1. https://backend.stg.dronline.me/panel_api/visits/my_calendar?month=1717093800
+2. https://backend.stg.dronline.me/panel_api/emr/medications
+3. https://backend.stg.dronline.me/panel_api/profile/status
+4. https://backend.stg.dronline.me/panel_api/visits/pending_for_specialist?today=true
+5. https://backend.stg.dronline.me/panel_api/visits/pending_for_specialist?visit_types[]=ONLINE&exclude_today=true
+6. https://backend.stg.dronline.me/panel_api/profile/prices
+7. https://backend.stg.dronline.me/panel_api/emr/encounters/stats
+8. https://backend.stg.dronline.me/panel_api/emr/encounters
+9. https://backend.stg.dronline.me/panel_api/emr/patients/connected
+10. https://backend.stg.dronline.me/panel_api/emr/tests
+11. https://backend.stg.dronline.me/panel_api/emr/procedureshttps://backend.stg.dronline.me/panel_api/emr/procedures
+12. https://backend.stg.dronline.me/panel_api/membership
+13. https://backend.stg.dronline.me/panel_api/my_team/members
+14. https://backend.stg.dronline.me/panel_api/my_team/stats
+15. https://backend.stg.dronline.me/panel_api/my_team
+16.
+
+<!-- livebook:{"break_markdown":true} -->
+
+###### Patient APIs
+
+Staging app
+
+1. https://backend.stg.dronline.me/api/login POST
+2. https://backend.stg.dronline.me/api/patient/status GET
+3. https://backend.stg.dronline.me/api/patient/credentials GET
+4. https://backend.stg.dronline.me/api/patient/children GET
+5. https://storage.googleapis.com/dronline-prod/images/placeholders/default_man_avatar.png?Expires=1716972800&GoogleAccessId=253819861912-compute%40developer.gserviceaccount.com&Signature=AjBLGFVhI6MEfNJa%2BgI3Kowhc5KPeL3EsW072laTm%2B2X41nY51Qym8INYqRL4ah1M0iZT9fLcTvvKd6nqtXVKPL3%2F96ZbVCRC8ectI2NT4PIqCqxe2hQnaYKq%2BRrPZtvEh5nmDKDWFk4D4FHL25IuWDNrDvBgwxdxZVyr%2FAcZZhGydDZ4nUVT2AyAwwIMMKxYTfmWvsxnAe6uB2j1ZnjuydVCiaqNBXAl%2FkVXW4qxymSD5%2BgWxUVL%2FbNKmbG5TRAoy1lshAkW0O%2FGqgbdPWNHss5uehcXGUyPRodHAvYTW4wmtkZsiRCMar%2Bd4GVpU0POhmObotqxmr0QrQ%2BiXvcwA%3D%3D GET
+6. https://backend.stg.dronline.me/api/devices PUT
+7. https://backend.stg.dronline.me/api/patient/address GET
+8. https://backend.stg.dronline.me/api/patient/address GET
+9. https://backend.stg.dronline.me/api/insurance_providers?country=in GET
+10. https://backend.stg.dronline.me/api/emr/vitals GET
+11. https://backend.stg.dronline.me/api/patient/history GET
+12. https://backend.stg.dronline.me/api/patient/review_of_system/history GET
+13. https://backend.stg.dronline.me/api/notifications/unread_count GET
+14. https://backend.stg.dronline.me/api/calls/local_clinic?lat=0.0&lon=0.0 GET
+15. https://backend.stg.dronline.me/api/medical_categories GET
+16. https://backend.stg.dronline.me/api/featured_doctors GET
+17. https://storage.googleapis.com/dronline-prod/images/placeholders/default_man_avatar.png?Expires=1716973195&GoogleAccessId=253819861912-compute%40developer.gserviceaccount.com&Signature=Zlt6%2FZyIGxJiPEbFWn1pgo%2F93P37C0jtAXpELYvkuQE2mOhoQahwH5Z7kD1%2BS27KcjwTbe7tSdrLk5r1BOrzKedgGHjkfLyPYx%2BVhXuO7knzlgmBBPub5blxAL2nDjk75YcjNax9h2dHsUb0xgtXfeGXqsGOQ0G76AxdUZAXfMsPDPZpwNcKTtahAIgpgNSfvxiCwL1pFr5ztH7tbSHYp1ekDZt6PM%2FUCgWSsrImZQ%2FX0fJzd%2FLjvIB3Cah5lUOuseVIxWitc2bQ4FMecHx%2FdqoHNGMQDoSaHcQiqYmXiEDUEcd67SHSZVmze%2BEplqhYqVuF63oVR56gZ8kNTGXUFA%3D%3D GET
+18. https://backend.stg.dronline.me/public_api/feature_flags/verify/show_us_board_banner GET
+19. https://backend.stg.dronline.me/api/visits/index_us_board_second_opinion GET
+20. https://storage.googleapis.com/dronline-dev/images/specialists/283181c8-76df-442d-9e9f-454885e722e4.png GET
+21. https://backend.stg.dronline.me/api/specialists?lat=12.8911775&lon=77.6146885 GET

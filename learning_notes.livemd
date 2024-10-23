@@ -1,0 +1,239 @@
+<!-- livebook:{"autosave_interval_s":60,"file_entries":[{"name":"sample_app_k8s.png","type":"attachment"}]} -->
+
+# Learning notes
+
+```elixir
+Mix.install(
+  [
+  #   {:bumblebee, "~> 0.5.3"},
+  #   {:exla, ">= 0.0.0"}
+  ]
+  # config: [nx: [default_backend: EXLA.Backend]]
+)
+```
+
+## Section
+
+```elixir
+IO.puts("hey")
+# first_name = nil
+# dat = DateTime.utc_now()
+# Calendar.strftime(dat, "%y-%m-%d  %I:%M %p")
+# String.to_integer("12")
+# [{"id": "105361e7-4615-41b4-b5fe-37b59db82330", "name": "ADDERALL TABS- Amphetamine- Dextroamphetamine-1.25MG", "refills": 3, "quantity": "U", "direction": "U", "price_aed": 200}, {"id": "d91c44ab-12ed-48f0-af45-4000b49a32fa", "name": "TOVIAZ TB24", "refills": 3, "quantity": "J", "direction": "U", "price_aed": 100}]
+# [{"id": "2389db90-9c1d-45b9-96da-9a62b5f7d883", "name": "cefprozil tabs", "refills": 3, "quantity": "U", "direction": "U", "price_aed": 0}]
+is_integer(1)
+# Integer.parse(12)
+defmodule K do
+  def parse_price(field) when field in [nil, ""], do: 0.0
+
+  def parse_price(field) when is_integer(field) do
+    field
+    |> Integer.to_string()
+    |> parse_price()
+  end
+
+  def parse_price(field) when is_float(field), do: field
+
+  def parse_price(field) do
+    case Float.parse(field) do
+      :error ->
+        0.0
+
+      {result, _} ->
+        result
+    end
+  end
+end
+
+f = %{"name" => "kk", "price_aed" => ""}
+Map.put(f, "price_aed", K.parse_price(f["price_aed"]))
+# K.parse_price(nil)
+le = "see #{inspect(f)}"
+IO.puts(le)
+# post "/admin_api/medications/upload_meds", params =  {"medications": file.csv}
+# post "/admin_api/medications/delete_all_meds", 
+```
+
+```elixir
+rawMsg = """
+Jatatavigalajjala pravahapavitasthale
+Galeavalambya lambitam bhujangatungamalikam
+Damad damad damaddama ninadavadamarvayam
+Chakara chandtandavam tanotu nah shivah shivam
+
+With his neck consecrated by the flow of water that flows from his hair,
+And on his neck a snake, which is hung like a garland,
+And the Damaru drum that emits the sound "Damat Damat Damat Damat",
+Lord Shiva did the auspicious dance of Tandava. May he give prosperity to all of us.
+
+Jata kata hasambhrama bhramanilimpanirjhari
+Vilolavichivalarai virajamanamurdhani
+Dhagadhagadhagajjva lalalata pattapavake
+Kishora chandrashekhare ratih pratikshanam mama
+
+I have a deep interest in Shiva
+Whose head is glorified by the rows of moving waves of the celestial Ganga river,
+Which stir in the deep well of his hair in tangled locks.
+Who has the brilliant fire burning on the surface of his forehead,
+And who has the crescent moon as a jewel on his head.
+
+Dharadharendrana ndinivilasabandhubandhura
+Sphuradigantasantati pramodamanamanase
+Krupakatakshadhorani nirudhadurdharapadi
+Kvachidigambare manovinodametuvastuni
+
+May my mind seek happiness in Lord Shiva,
+In whose mind all the living beings of the glorious universe exist,
+Who is the companion of Parvati (daughter of the mountain king),
+Who controls unsurpassed adversity with his compassionate gaze, Which is all-pervading
+And who wears the Heavens as his raiment.
+
+Jata bhujan gapingala sphuratphanamaniprabha
+Kadambakunkuma dravapralipta digvadhumukhe
+Madandha sindhu rasphuratvagutariyamedure
+Mano vinodamadbhutam bibhartu bhutabhartari
+
+May I find wonderful pleasure in Lord Shiva, who is the advocate of all life,
+With his creeping snake with its reddish brown hood and the shine of its gem on it
+Spreading variegated colors on the beautiful faces of the Goddesses of the Directions,
+Which is covered by a shimmering shawl made from the skin of a huge, inebriated elephant.
+
+Sahasra lochana prabhritya sheshalekhashekhara
+Prasuna dhulidhorani vidhusaranghripithabhuh
+Bhujangaraja malaya nibaddhajatajutaka
+Shriyai chiraya jayatam chakora bandhushekharah
+
+May Lord Shiva give us prosperity,
+Who has the Moon as a crown,
+Whose hair is bound by the red snake-garland,
+Whose footrest is darkened by the flow of dust from flowers
+Which fall from the heads of all the gods – Indra, Vishnu and others.
+
+Lalata chatvarajvaladhanajnjayasphulingabha
+nipitapajnchasayakam namannilimpanayakam
+Sudha mayukha lekhaya virajamanashekharam
+Maha kapali sampade shirojatalamastunah
+
+May we obtain the riches of the Siddhis from the tangled strands Shiva’s hair,
+Who devoured the God of Love with the sparks of the fire that burns on his forehead,
+Which is revered by all the heavenly leaders,
+Which is beautiful with a crescent moon.
+
+Karala bhala pattikadhagaddhagaddhagajjvala
+Ddhanajnjaya hutikruta prachandapajnchasayake
+Dharadharendra nandini kuchagrachitrapatraka
+Prakalpanaikashilpini trilochane ratirmama
+
+My interest is in Lord Shiva, who has three eyes,
+Who offered the powerful God of Love to fire.
+The terrible surface of his forehead burns with the sound "Dhagad, Dhagad ..."
+He is the only artist expert in tracing decorative lines
+on the tips of the breasts of Parvati, the daughter of the mountain king.
+
+navina megha mandali niruddhadurdharasphurat
+Kuhu nishithinitamah prabandhabaddhakandharah
+nilimpanirjhari dharastanotu krutti sindhurah
+Kalanidhanabandhurah shriyam jagaddhurandharah
+
+May Lord Shiva give us prosperity,
+The one who bears the weight of this universe,
+Who is enchanting with the moon,
+Who has the celestial river Ganga
+Whose neck is dark as midnight on a new moon night, covered in layers of clouds.
+
+Praphulla nila pankaja prapajnchakalimchatha
+Vdambi kanthakandali raruchi prabaddhakandharam
+Smarachchidam purachchhidam bhavachchidam makhachchidam
+Gajachchidandhakachidam tamamtakachchidam bhaje
+
+I pray to Lord Shiva, whose neck is bound with the brightness of the temples
+hanging with the glory of fully bloomed blue lotus flowers,
+Which look like the blackness of the universe.
+Who is the slayer of Manmatha, who destroyed the Tripura,
+Who destroyed the bonds of worldly life, who destroyed the sacrifice,
+Who destroyed the demon Andhaka, who is the destroyer of the elephants,
+And who has overwhelmed the God of death, Yama.
+
+Akharvagarvasarvamangala kalakadambamajnjari
+Rasapravaha madhuri vijrumbhana madhuvratam
+Smarantakam purantakam bhavantakam makhantakam
+Gajantakandhakantakam tamantakantakam bhaje
+
+I pray to Lord Siva, who has bees flying all around because of the sweet
+Scent of honey coming from the beautiful bouquet of auspicious Kadamba flowers,
+Who is the slayer of Manmatha, who destroyed the Tripura,
+Who destroyed the bonds of worldly life, who destroyed the sacrifice,
+Who destroyed the demon Andhaka, who is the destroyer of the elephants,
+And who has overwhelmed the God of death, Yama.
+
+Jayatvadabhravibhrama bhramadbhujangamasafur
+Dhigdhigdhi nirgamatkarala bhaal havyavat
+Dhimiddhimiddhimidhva nanmrudangatungamangala
+Dhvanikramapravartita prachanda tandavah shivah
+
+Shiva, whose dance of Tandava is in tune with the series of loud
+sounds of drum making the sound “Dhimid Dhimid”,
+Who has fire on his great forehead, the fire that is spreading out because of the
+breath of the snake, wandering in whirling motions in the glorious sky.
+
+Drushadvichitratalpayor bhujanga mauktikasrajor
+Garishtharatnaloshthayoh suhrudvipakshapakshayoh
+Trushnaravindachakshushoh prajamahimahendrayoh
+Sama pravartayanmanah kada sadashivam bhaje
+
+When will I be able to worship Lord Sadashiva, the eternally auspicious God,
+With equanimous vision towards people or emperors,
+Towards a blade of grass and a lotus, towards friends and enemies,
+Towards the most precious gem and a lump of dirt,
+Toward a snake or a garland and towards the varied forms of the world?
+
+Kada nilimpanirjhari nikujnjakotare vasanh
+Vimuktadurmatih sada shirah sthamajnjalim vahanh
+Vimuktalolalochano lalamabhalalagnakah
+Shiveti mantramuchcharan sada sukhi bhavamyaham
+
+When I can be happy, living in a cave near the celestial river Ganga,
+Bringing my hands clasped on my head all the time,
+With my impure thoughts washed away, uttering the mantra of Shiva,
+Devoted to the God with a glorious forehead and with vibrant eyes?
+
+Imam hi nityameva muktamuttamottamam stavam
+Pathansmaran bruvannaro vishuddhimeti santatam
+Hare gurau subhaktimashu yati nanyatha gatim
+Vimohanam hi dehinam sushankarasya chintanam
+
+Anyone who reads, remembers and recites this stotra as stated here
+Is purified forever and obtains devotion in the great Guru Shiva.
+For this devotion, there is no other way or refuge.
+Just the mere thought of Shiva removes the delusion.
+"""
+```
+
+```elixir
+require Integer
+
+String.split(rawMsg, "\n\n", trim: true)
+|> Enum.with_index(fn element, index -> {index, element} end)
+|> Enum.reject(fn {k, _v} -> Integer.is_odd(k) end)
+|> Enum.reduce("", fn {_k, v}, acc -> acc <> v <> "\n\n" end)
+|> IO.puts()
+
+# Integer.is_even(1)
+```
+
+## Kubernetes
+
+* Services
+  1. Cluster IP -> A ClusterIP service in Kubernetes is a virtual IP (VIP) that is only accessible within the Kubernetes cluster. It is not exposed to the external network. This type of service is typically used for internal communication between services or pods within the cluster. The ClusterIP is automatically assigned by the Kubernetes service proxy and load balancer.
+  2. Nodeport -> A NodePort service in Kubernetes is a type of service that exposes a service on a static port on each node in the cluster. This allows the service to be accessed from outside the cluster, using the node's IP address and the assigned port. This is useful for external access to the service, such as when you want to expose an application for external use. The range of this port is 30000-32767.
+  3. Loadbalancer -> A LoadBalancer service in Kubernetes is a type of service that exposes a service to the external network by provisioning an external IP address. This external IP is usually a cloud provider's load balancer, which then routes traffic to the appropriate pods in the Kubernetes cluster. This type of service is typically used when you want to expose your application to the internet. The LoadBalancer service automatically creates an external IP address and configures an external load balancer to route traffic to your set of pods.
+
+<!-- livebook:{"break_markdown":true} -->
+
+![](files/sample_app_k8s.png)
+
+```elixir
+String.to_integer("20")
+30 == "30"
+```
